@@ -17,6 +17,7 @@
       <groupId>com.google.cloud.tools</groupId>
       <artifactId>jib-maven-plugin-extension-api</artifactId>
       <version>0.3.0</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>
