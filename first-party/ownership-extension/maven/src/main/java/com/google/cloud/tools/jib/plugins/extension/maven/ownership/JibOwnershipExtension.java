@@ -35,7 +35,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class OwnershipJibExtension implements JibMavenPluginExtension<Configuration> {
+public class JibOwnershipExtension implements JibMavenPluginExtension<Configuration> {
 
   private Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
 
@@ -52,9 +52,9 @@ public class OwnershipJibExtension implements JibMavenPluginExtension<Configurat
       MavenData mavenData,
       ExtensionLogger logger)
       throws JibPluginExtensionException {
-    logger.log(LogLevel.LIFECYCLE, "Running Ownership Jib Extension");
+    logger.log(LogLevel.LIFECYCLE, "Running Jib Ownership Extension");
     if (!config.isPresent()) {
-      logger.log(LogLevel.WARN, "Nothing configured for Ownership Jib Extension");
+      logger.log(LogLevel.WARN, "Nothing configured for Jib Ownership Extension");
       return buildPlan;
     }
 
