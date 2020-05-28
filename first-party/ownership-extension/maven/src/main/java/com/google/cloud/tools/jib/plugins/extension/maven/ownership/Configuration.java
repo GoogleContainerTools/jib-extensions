@@ -22,8 +22,9 @@ import java.util.List;
 public class Configuration {
 
   public static class Entry {
-    private String glob = "";
-    private String ownership = "";
+    // VisibleForTesting
+    String glob = "";
+    String ownership = "";
 
     String getGlob() {
       return glob;
@@ -34,7 +35,8 @@ public class Configuration {
     }
   }
 
-  private List<Entry> entries = new ArrayList<>();
+  // VisibleForTesting
+  List<Entry> entries = new ArrayList<>();
 
   List<Entry> getEntries() {
     return entries;

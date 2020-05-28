@@ -7,6 +7,7 @@ plugins {
 dependencies {
   compileOnly "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
 
+  testImplementation "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
   testImplementation "junit:junit:${dependencyVersions.JUNIT}"
   testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
 }
@@ -34,7 +35,7 @@ publishing {
     mavenJava(MavenPublication) {
       pom {
         name = 'Ownership Extension for Jib Maven Plugin'
-        description = 'Build container images.'
+        description = 'Allows customizing ownership of files in image layers.'
       }
       from components.java
     }
