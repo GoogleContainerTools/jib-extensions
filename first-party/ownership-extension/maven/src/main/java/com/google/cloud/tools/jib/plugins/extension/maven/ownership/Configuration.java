@@ -22,8 +22,8 @@ import java.util.List;
 public class Configuration {
 
   public static class Entry {
-    private String glob;
-    private String ownership;
+    private String glob = "";
+    private String ownership = "";
 
     String getGlob() {
       return glob;

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+  "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+  "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+<suppressions>
+  <!-- clash with google java format -->
+  <suppress files=".*\.java" checks="SingleLineJavadoc"/>
+  <suppress files=".*\.java" checks="Indentation"/>
+  <suppress files=".*\.java" checks="RightCurly"/>
+  <suppress files=".*\.java" checks="LineLength"/>
+
+  <!-- leniency for test files -->
+  <suppress files=".*[\\/]src[\\/]test[\\/].*\.java" checks="MissingJavadocMethod"/>
+  <suppress files=".*[\\/]src[\\/]integration-test[\\/].*\.java" checks="MissingJavadocMethod"/>
+  <suppress files=".*[\\/]src[\\/]integration-test[\\/].*\.java" checks="VariableDeclarationUsageDistance"/>
+
+</suppressions>
