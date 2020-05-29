@@ -11,6 +11,7 @@
 
   <!-- leniency for test files -->
   <suppress files=".*[\\/]src[\\/]test[\\/].*\.java" checks="MissingJavadocMethod"/>
+  <suppress files=".*[\\/]src[\\/]test[\\/].*\.java" checks="VariableDeclarationUsageDistance"/>
   <suppress files=".*[\\/]src[\\/]integration-test[\\/].*\.java" checks="MissingJavadocMethod"/>
   <suppress files=".*[\\/]src[\\/]integration-test[\\/].*\.java" checks="VariableDeclarationUsageDistance"/>
 
