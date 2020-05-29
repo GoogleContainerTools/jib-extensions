@@ -47,7 +47,7 @@ publishing {
 release {
   tagTemplate = 'v$version-layer-filter-maven'
   git {
-    requireBranch = /^release_layer_filter_maven_v\d+.*$/  //regex
+    requireBranch = /^layer_filter_maven_release_v\d+.*$/  //regex
   }
 }
 /* RELEASE */
