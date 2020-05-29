@@ -1,2 +1,4 @@
 include ':jib-ownership-extension-maven'
 project(':jib-ownership-extension-maven').projectDir = new File('first-party/ownership-extension/maven')
+include ':jib-layer-filter-extension-maven'
+project(':jib-layer-filter-extension-maven').projectDir = new File('first-party/layer-filter-extension/maven')

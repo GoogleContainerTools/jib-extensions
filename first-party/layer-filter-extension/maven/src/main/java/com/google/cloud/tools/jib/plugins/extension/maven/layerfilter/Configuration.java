@@ -14,31 +14,31 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
+package com.google.cloud.tools.jib.plugins.extension.maven.layerfilter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Configuration {
 
-  public static class Entry {
+  public static class Filter {
     // VisibleForTesting
     String glob = "";
-    String ownership = "";
+    String moveIntoLayerName = "";
 
     String getGlob() {
       return glob;
     }
 
-    String getOwnership() {
-      return ownership;
+    String getMoveIntoLayerName() {
+      return moveIntoLayerName;
     }
   }
 
   // VisibleForTesting
-  List<Entry> entries = new ArrayList<>();
+  List<Filter> filters = new ArrayList<>();
 
-  List<Entry> getEntries() {
-    return entries;
+  List<Filter> getFilters() {
+    return filters;
   }
 }

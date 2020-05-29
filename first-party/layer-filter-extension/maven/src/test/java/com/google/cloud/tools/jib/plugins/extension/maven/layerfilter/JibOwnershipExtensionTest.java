@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
+package com.google.cloud.tools.jib.plugins.extension.maven.layerfilter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -28,6 +28,7 @@ import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
+import com.google.cloud.tools.jib.plugins.extension.maven.layerfilter.JibLayerFilterExtension;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,7 +56,7 @@ public class JibOwnershipExtensionTest {
   public void testExtendContainerBuildPlan_noConfiguration() throws JibPluginExtensionException {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     ContainerBuildPlan newPlan =
-        new JibOwnershipExtension()
+        new JibLayerFilterExtension()
             .extendContainerBuildPlan(
                 buildPlan, Collections.emptyMap(), Optional.empty(), mavenData, logger);
     assertSame(buildPlan, newPlan);
@@ -87,15 +88,15 @@ public class JibOwnershipExtensionTest {
 
     Configuration.Entry entry1 = new Configuration.Entry();
     entry1.glob = "/target/**";
-    entry1.ownership = "10:20";
+    entry1.moveIntoLayerName = "10:20";
     Configuration.Entry entry2 = new Configuration.Entry();
     entry2.glob = "**/bar";
-    entry2.ownership = "999:777";
+    entry2.moveIntoLayerName = "999:777";
     Configuration config = new Configuration();
-    config.entries = Arrays.asList(entry1, entry2);
+    config.filters = Arrays.asList(entry1, entry2);
 
     ContainerBuildPlan newPlan =
-        new JibOwnershipExtension()
+        new JibLayerFilterExtension()
             .extendContainerBuildPlan(
                 buildPlan, Collections.emptyMap(), Optional.of(config), mavenData, logger);
 
