@@ -47,7 +47,7 @@ publishing {
 release {
   tagTemplate = 'v$version-ownership-maven'
   git {
-    requireBranch = /^release_ownership_maven_v\d+.*$/  //regex
+    requireBranch = /^ownership_maven_release_v\d+.*$/  //regex
   }
 }
 /* RELEASE */
