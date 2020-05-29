@@ -1,0 +1,15 @@
+build/
+target/
+bin/
+*.iml
+*.ipr
+*.iws
+.idea
+.gradle/
+# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+**/.mvn/wrapper/maven-wrapper.jar
+.settings/
+.classpath
+.project
+.DS_Store
+*.swp
