@@ -85,7 +85,10 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
           }
         }
       }
-      filteredOriginalLayers.add(layer.toBuilder().setEntries(filesToKeep).build());
+
+      if (!filesToKeep.isEmpty()) {
+        filteredOriginalLayers.add(layer.toBuilder().setEntries(filesToKeep).build());
+      }
     }
 
     // Add filtered original layers first, then newly created non-empty layers (if any).
@@ -114,6 +117,11 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
                 + targetLayerName
                 + "' is not supported; specify a new layer name in '<moveIntoLayerName>'.");
       }
+      if (filter.getGlob().isEmpty()) {
+        throw new JibPluginExtensionException(
+            getClass(), "glob pattern not given in filter configuration");
+      }
+
       pathMatchers.put(
           FileSystems.getDefault().getPathMatcher("glob:" + filter.getGlob()),
           filter.getMoveIntoLayerName());

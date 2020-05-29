@@ -31,8 +31,8 @@ import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -45,6 +45,8 @@ public class JibLayerFilterExtensionTest {
 
   @Mock private MavenData mavenData;
   @Mock private ExtensionLogger logger;
+
+  private Map<String, String> properties;
 
   private static FileEntriesLayer buildTestLayer(String layerName, List<String> filePaths) {
     Builder builder = FileEntriesLayer.builder().setName(layerName);
@@ -67,10 +69,24 @@ public class JibLayerFilterExtensionTest {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, Collections.emptyMap(), Optional.empty(), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), mavenData, logger);
     assertSame(buildPlan, newPlan);
     verify(logger).log(LogLevel.WARN, "Nothing configured for Jib Layer Filter Extension");
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_noGlobGiven() {
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    Configuration config = new Configuration();
+    config.filters = Arrays.asList(new Configuration.Filter());
+    try {
+      new JibLayerFilterExtension()
+          .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
+      fail();
+    } catch (JibPluginExtensionException ex) {
+      assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
+      assertEquals("glob pattern not given in filter configuration", ex.getMessage());
+    }
   }
 
   @Test
@@ -85,15 +101,36 @@ public class JibLayerFilterExtensionTest {
 
     try {
       new JibLayerFilterExtension()
-          .extendContainerBuildPlan(
-              buildPlan, Collections.emptyMap(), Optional.of(config), mavenData, logger);
+          .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
       assertEquals(
-          "moving files into built-in layer 'same layer name' is not supported; specify a new layer name in '<moveIntoLayerName>'.",
+          "moving files into built-in layer 'same layer name' is not supported; specify a new "
+              + "layer name in '<moveIntoLayerName>'.",
           ex.getMessage());
     }
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_emptyOriginalLayerNameDoesNotClash()
+      throws JibPluginExtensionException {
+    FileEntriesLayer layer = buildTestLayer("" /* deliberately empty */, Arrays.asList("/foo"));
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
+
+    Configuration.Filter filter = new Configuration.Filter();
+    filter.glob = "nothing/matches";
+    filter.moveIntoLayerName = "";
+    Configuration config = new Configuration();
+    config.filters = Arrays.asList(filter);
+
+    ContainerBuildPlan newPlan =
+        new JibLayerFilterExtension()
+            .extendContainerBuildPlan(
+                buildPlan, properties, Optional.of(config), mavenData, logger);
+
+    FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
+    assertEquals(layer.getEntries(), newLayer.getEntries());
   }
 
   @Test
@@ -111,18 +148,36 @@ public class JibLayerFilterExtensionTest {
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
             .extendContainerBuildPlan(
-                buildPlan, Collections.emptyMap(), Optional.of(config), mavenData, logger);
+                buildPlan, properties, Optional.of(config), mavenData, logger);
 
+    assertEquals(2, newPlan.getLayers().size());
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
 
     assertEquals("", newLayer1.getName());
     assertEquals("", newLayer2.getName());
-    assertEquals(1, newLayer1.getEntries().size());
-    assertEquals(2, newLayer2.getEntries().size());
-    assertSame(layer1.getEntries().get(0), newLayer1.getEntries().get(0));
-    assertSame(layer2.getEntries().get(0), newLayer2.getEntries().get(0));
-    assertSame(layer2.getEntries().get(1), newLayer2.getEntries().get(1));
+    assertEquals(layer1.getEntries(), newLayer1.getEntries());
+    assertEquals(layer2.getEntries(), newLayer2.getEntries());
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_deletion() throws JibPluginExtensionException {
+    FileEntriesLayer layer1 = buildTestLayer("", Arrays.asList("/foo"));
+    FileEntriesLayer layer2 = buildTestLayer("", Arrays.asList("/foo", "/bar", "/foo/baz"));
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder().setLayers(Arrays.asList(layer1, layer2)).build();
+
+    Configuration.Filter filter = new Configuration.Filter();
+    filter.glob = "**";
+    Configuration config = new Configuration();
+    config.filters = Arrays.asList(filter);
+
+    ContainerBuildPlan newPlan =
+        new JibLayerFilterExtension()
+            .extendContainerBuildPlan(
+                buildPlan, properties, Optional.of(config), mavenData, logger);
+
+    assertEquals(0, newPlan.getLayers().size());
   }
 
   @Test
@@ -160,7 +215,7 @@ public class JibLayerFilterExtensionTest {
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
             .extendContainerBuildPlan(
-                buildPlan, Collections.emptyMap(), Optional.of(config), mavenData, logger);
+                buildPlan, properties, Optional.of(config), mavenData, logger);
 
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
