@@ -1,0 +1,2 @@
+include ':jib-ownership-extension-maven'
+project(':jib-ownership-extension-maven').projectDir = new File('first-party/ownership-extension/maven')
