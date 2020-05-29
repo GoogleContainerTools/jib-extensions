@@ -44,9 +44,9 @@ publishing {
 
 // Release plugin (git release commits and version updates)
 release {
-  tagTemplate = 'v$version-maven-ownership'
+  tagTemplate = 'v$version-ownership-maven'
   git {
-    requireBranch = /^maven_ownership_release_v\d+.*$/  //regex
+    requireBranch = /^release_ownership_maven_v\d+.*$/  //regex
   }
 }
 /* RELEASE */
