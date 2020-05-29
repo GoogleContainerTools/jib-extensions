@@ -105,23 +105,21 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     List<String> originalLayerNames =
         buildPlan.getLayers().stream().map(LayerObject::getName).collect(Collectors.toList());
 
-    // Prepare glob path matchers from configured filters.
     for (Configuration.Filter filter : config.getFilters()) {
-      if (originalLayerNames.contains(filter.getMoveIntoLayerName())) {
+      String targetLayerName = filter.getMoveIntoLayerName();
+      if (!targetLayerName.isEmpty() && originalLayerNames.contains(targetLayerName)) {
         throw new JibPluginExtensionException(
             getClass(),
             "moving files into built-in layer '"
-                + filter.getMoveIntoLayerName()
+                + targetLayerName
                 + "' is not supported; specify a new layer name in '<moveIntoLayerName>'.");
       }
       pathMatchers.put(
           FileSystems.getDefault().getPathMatcher("glob:" + filter.getGlob()),
           filter.getMoveIntoLayerName());
 
-      if (!newMoveIntoLayers.containsKey(filter.getMoveIntoLayerName())) {
-        newMoveIntoLayers.put(
-            filter.getMoveIntoLayerName(),
-            FileEntriesLayer.builder().setName(filter.getMoveIntoLayerName()));
+      if (!newMoveIntoLayers.containsKey(targetLayerName)) {
+        newMoveIntoLayers.put(targetLayerName, FileEntriesLayer.builder().setName(targetLayerName));
       }
     }
   }
