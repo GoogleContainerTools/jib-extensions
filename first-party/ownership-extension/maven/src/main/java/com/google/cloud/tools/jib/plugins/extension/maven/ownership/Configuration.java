@@ -16,15 +16,15 @@
 
 package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Configuration {
 
   public static class Entry {
-    // VisibleForTesting
-    String glob = "";
-    String ownership = "";
+    @VisibleForTesting String glob = "";
+    @VisibleForTesting String ownership = "";
 
     String getGlob() {
       return glob;
@@ -35,8 +35,7 @@ public class Configuration {
     }
   }
 
-  // VisibleForTesting
-  List<Entry> entries = new ArrayList<>();
+  @VisibleForTesting List<Entry> entries = new ArrayList<>();
 
   List<Entry> getEntries() {
     return entries;

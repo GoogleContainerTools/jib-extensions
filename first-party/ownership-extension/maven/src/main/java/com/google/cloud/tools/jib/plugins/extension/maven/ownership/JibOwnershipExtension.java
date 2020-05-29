@@ -59,6 +59,10 @@ public class JibOwnershipExtension implements JibMavenPluginExtension<Configurat
     }
 
     for (Configuration.Entry entry : config.get().getEntries()) {
+      if (entry.getGlob().isEmpty()) {
+        throw new JibPluginExtensionException(
+            getClass(), "glob pattern not given in ownership configuration");
+      }
       pathMatchers.put(
           FileSystems.getDefault().getPathMatcher("glob:" + entry.getGlob()), entry.getOwnership());
     }
@@ -77,19 +81,22 @@ public class JibOwnershipExtension implements JibMavenPluginExtension<Configurat
   }
 
   private FileEntry modifyFileEntry(FileEntry entry) {
+    String newOwnership = null;
+
     for (Entry<PathMatcher, String> mapEntry : pathMatchers.entrySet()) {
       PathMatcher matcher = mapEntry.getKey();
       Path pathInContainer = Paths.get(entry.getExtractionPath().toString());
       if (matcher.matches(pathInContainer)) {
-        entry =
-            new FileEntry(
-                entry.getSourceFile(),
-                entry.getExtractionPath(),
-                entry.getPermissions(),
-                entry.getModificationTime(),
-                mapEntry.getValue());
+        newOwnership = mapEntry.getValue();
       }
     }
-    return entry;
+    return newOwnership == null
+        ? entry
+        : new FileEntry(
+            entry.getSourceFile(),
+            entry.getExtractionPath(),
+            entry.getPermissions(),
+            entry.getModificationTime(),
+            newOwnership);
   }
 }
