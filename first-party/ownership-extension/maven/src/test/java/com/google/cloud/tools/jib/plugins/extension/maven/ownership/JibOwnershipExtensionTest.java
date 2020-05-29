@@ -18,6 +18,7 @@ package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
@@ -30,8 +31,8 @@ import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,6 +47,8 @@ public class JibOwnershipExtensionTest {
   @Mock private MavenData mavenData;
   @Mock private ExtensionLogger logger;
 
+  private Map<String, String> properties;
+
   private static <T> List<T> mapLayerEntries(
       FileEntriesLayer layer, Function<FileEntry, T> mapper) {
     return layer.getEntries().stream().map(mapper).collect(Collectors.toList());
@@ -56,10 +59,24 @@ public class JibOwnershipExtensionTest {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
-            .extendContainerBuildPlan(
-                buildPlan, Collections.emptyMap(), Optional.empty(), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), mavenData, logger);
     assertSame(buildPlan, newPlan);
     verify(logger).log(LogLevel.WARN, "Nothing configured for Jib Ownership Extension");
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_noGlobGiven() {
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    Configuration config = new Configuration();
+    config.entries = Arrays.asList(new Configuration.Entry());
+    try {
+      new JibOwnershipExtension()
+          .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
+      fail();
+    } catch (JibPluginExtensionException ex) {
+      assertEquals(JibOwnershipExtension.class, ex.getExtensionClass());
+      assertEquals("glob pattern not given in ownership configuration", ex.getMessage());
+    }
   }
 
   @Test
@@ -83,7 +100,7 @@ public class JibOwnershipExtensionTest {
             .addEntry(Paths.get("whatever"), AbsoluteUnixPath.get("/untouched/bar"))
             .build();
     ContainerBuildPlan buildPlan =
-        ContainerBuildPlan.builder().setLayers(Arrays.asList(layer1, layer2)).build();
+        ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
     Configuration.Entry entry1 = new Configuration.Entry();
     entry1.glob = "/target/**";
@@ -97,7 +114,7 @@ public class JibOwnershipExtensionTest {
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
             .extendContainerBuildPlan(
-                buildPlan, Collections.emptyMap(), Optional.of(config), mavenData, logger);
+                buildPlan, properties, Optional.of(config), mavenData, logger);
 
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
@@ -127,5 +144,31 @@ public class JibOwnershipExtensionTest {
     assertEquals(
         Arrays.asList("10:20", "999:777", "10:20", "999:777", "", "999:777"),
         mapLayerEntries(newLayer2, FileEntry::getOwnership));
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_lastConfigWins() throws JibPluginExtensionException {
+    FileEntriesLayer layer =
+        FileEntriesLayer.builder()
+            .addEntry(Paths.get("whatever"), AbsoluteUnixPath.get("/target/file"))
+            .build();
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
+
+    Configuration.Entry entry1 = new Configuration.Entry();
+    entry1.glob = "**";
+    entry1.ownership = "10:20";
+    Configuration.Entry entry2 = new Configuration.Entry();
+    entry2.glob = "**";
+    entry2.ownership = "999:777";
+    Configuration config = new Configuration();
+    config.entries = Arrays.asList(entry1, entry2);
+
+    ContainerBuildPlan newPlan =
+        new JibOwnershipExtension()
+            .extendContainerBuildPlan(
+                buildPlan, properties, Optional.of(config), mavenData, logger);
+
+    FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
+    assertEquals(Arrays.asList("999:777"), mapLayerEntries(newLayer, FileEntry::getOwnership));
   }
 }
