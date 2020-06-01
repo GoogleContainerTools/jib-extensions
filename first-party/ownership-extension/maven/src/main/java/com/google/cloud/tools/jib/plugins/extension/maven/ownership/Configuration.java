@@ -20,9 +20,26 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Extension-specific Maven configuration.
+ *
+ * <p>Example usage in {@code pom.xml}:
+ *
+ * <pre>{@code
+ * <configuration implementation="com.google.cloud.tools.jib.plugins.extension.maven.ownership.Configuration">
+ *   <rules>
+ *     <rule>
+ *       <!-- sets UID 300 and GID 500 for all files under /app/classes/ -->
+ *       <glob>/app/classes/**</glob>
+ *       <ownership>300:500</ownership>
+ *     </rule>
+ *   </rules>
+ * </configuration>
+ * }</pre>
+ */
 public class Configuration {
 
-  public static class Entry {
+  public static class Rule {
     @VisibleForTesting String glob = "";
     @VisibleForTesting String ownership = "";
 
@@ -35,9 +52,9 @@ public class Configuration {
     }
   }
 
-  @VisibleForTesting List<Entry> entries = new ArrayList<>();
+  @VisibleForTesting List<Rule> rules = new ArrayList<>();
 
-  List<Entry> getEntries() {
-    return entries;
+  List<Rule> getRules() {
+    return rules;
   }
 }
