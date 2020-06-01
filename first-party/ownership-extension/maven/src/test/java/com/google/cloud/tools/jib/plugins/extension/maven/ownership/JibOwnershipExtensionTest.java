@@ -68,7 +68,7 @@ public class JibOwnershipExtensionTest {
   public void testExtendContainerBuildPlan_noGlobGiven() {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     Configuration config = new Configuration();
-    config.entries = Arrays.asList(new Configuration.Entry());
+    config.rules = Arrays.asList(new Configuration.Rule());
     try {
       new JibOwnershipExtension()
           .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
@@ -102,14 +102,14 @@ public class JibOwnershipExtensionTest {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
-    Configuration.Entry entry1 = new Configuration.Entry();
-    entry1.glob = "/target/**";
-    entry1.ownership = "10:20";
-    Configuration.Entry entry2 = new Configuration.Entry();
-    entry2.glob = "**/bar";
-    entry2.ownership = "999:777";
+    Configuration.Rule rule1 = new Configuration.Rule();
+    rule1.glob = "/target/**";
+    rule1.ownership = "10:20";
+    Configuration.Rule rule2 = new Configuration.Rule();
+    rule2.glob = "**/bar";
+    rule2.ownership = "999:777";
     Configuration config = new Configuration();
-    config.entries = Arrays.asList(entry1, entry2);
+    config.rules = Arrays.asList(rule1, rule2);
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
@@ -154,14 +154,14 @@ public class JibOwnershipExtensionTest {
             .build();
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
-    Configuration.Entry entry1 = new Configuration.Entry();
-    entry1.glob = "**";
-    entry1.ownership = "10:20";
-    Configuration.Entry entry2 = new Configuration.Entry();
-    entry2.glob = "**";
-    entry2.ownership = "999:777";
+    Configuration.Rule rule1 = new Configuration.Rule();
+    rule1.glob = "**";
+    rule1.ownership = "10:20";
+    Configuration.Rule rule2 = new Configuration.Rule();
+    rule2.glob = "**";
+    rule2.ownership = "999:777";
     Configuration config = new Configuration();
-    config.entries = Arrays.asList(entry1, entry2);
+    config.rules = Arrays.asList(rule1, rule2);
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()

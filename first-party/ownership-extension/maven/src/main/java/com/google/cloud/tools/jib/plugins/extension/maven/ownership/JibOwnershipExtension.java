@@ -58,29 +58,29 @@ public class JibOwnershipExtension implements JibMavenPluginExtension<Configurat
       return buildPlan;
     }
 
-    for (Configuration.Entry entry : config.get().getEntries()) {
-      if (entry.getGlob().isEmpty()) {
+    for (Configuration.Rule rule : config.get().getRules()) {
+      if (rule.getGlob().isEmpty()) {
         throw new JibPluginExtensionException(
             getClass(), "glob pattern not given in ownership configuration");
       }
       pathMatchers.put(
-          FileSystems.getDefault().getPathMatcher("glob:" + entry.getGlob()), entry.getOwnership());
+          FileSystems.getDefault().getPathMatcher("glob:" + rule.getGlob()), rule.getOwnership());
     }
 
     @SuppressWarnings("unchecked")
     List<FileEntriesLayer> layers = (List<FileEntriesLayer>) buildPlan.getLayers();
     List<FileEntriesLayer> newLayers =
-        layers.stream().map(this::modifyLayer).collect(Collectors.toList());
+        layers.stream().map(this::applyRulesToLayer).collect(Collectors.toList());
     return buildPlan.toBuilder().setLayers(newLayers).build();
   }
 
-  private FileEntriesLayer modifyLayer(FileEntriesLayer layer) {
+  private FileEntriesLayer applyRulesToLayer(FileEntriesLayer layer) {
     List<FileEntry> entries =
-        layer.getEntries().stream().map(this::modifyFileEntry).collect(Collectors.toList());
+        layer.getEntries().stream().map(this::applyRulesToFileEntry).collect(Collectors.toList());
     return layer.toBuilder().setEntries(entries).build();
   }
 
-  private FileEntry modifyFileEntry(FileEntry entry) {
+  private FileEntry applyRulesToFileEntry(FileEntry entry) {
     String newOwnership = null;
 
     for (Entry<PathMatcher, String> mapEntry : pathMatchers.entrySet()) {
