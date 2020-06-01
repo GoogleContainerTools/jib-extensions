@@ -24,7 +24,6 @@ import static org.mockito.Mockito.verify;
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
-import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer.Builder;
 import com.google.cloud.tools.jib.api.buildplan.LayerObject;
 import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
@@ -51,7 +50,7 @@ public class JibLayerFilterExtensionTest {
   private Map<String, String> properties;
 
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
-    Builder builder = FileEntriesLayer.builder().setName(layerName);
+    FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
     for (String path : filePaths) {
       builder.addEntry(Paths.get("whatever"), AbsoluteUnixPath.get(path));
     }
