@@ -28,9 +28,14 @@ import java.util.List;
  * <pre>{@code
  * <configuration implementation="com.google.cloud.tools.jib.plugins.extension.maven.ownership.Configuration">
  *   <rules>
+ *     <!-- sets UID 300 for all files under /app/classes/ -->
  *     <rule>
- *       <!-- sets UID 300 and GID 500 for all files under /app/classes/ -->
  *       <glob>/app/classes/**</glob>
+ *       <ownership>300</ownership>
+ *     </rule>
+ *     <!-- sets UID 300 and GID 500 for all files under /static/ -->
+ *     <rule>
+ *       <glob>/static/**</glob>
  *       <ownership>300:500</ownership>
  *     </rule>
  *   </rules>
