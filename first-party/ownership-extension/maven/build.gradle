@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
   compileOnly "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
+  compileOnly "com.google.guava:guava:${dependencyVersions.GUAVA}"
 
   testImplementation "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
   testImplementation "junit:junit:${dependencyVersions.JUNIT}"
@@ -44,9 +45,9 @@ publishing {
 
 // Release plugin (git release commits and version updates)
 release {
-  tagTemplate = 'v$version-maven-ownership'
+  tagTemplate = 'v$version-ownership-maven'
   git {
-    requireBranch = /^maven_ownership_release_v\d+.*$/  //regex
+    requireBranch = /^ownership_maven_release_v\d+.*$/  //regex
   }
 }
 /* RELEASE */
