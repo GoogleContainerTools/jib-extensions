@@ -16,27 +16,46 @@
 
 package com.google.cloud.tools.jib.plugins.extension.maven.layerfilter;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Extension-specific Maven configuration.
+ *
+ * <p>Example usage in {@code pom.xml}:
+ *
+ * <pre>{@code
+ * <configuration implementation="com.google.cloud.tools.jib.plugins.extension.maven.layerfilter.Configuration">
+ *   <filters>
+ *     <filter>
+ *       <glob>**&#47;google-*</glob>
+ *       <toLayer>google libraries</toLayer>
+ *     </filter>
+ *     <filter>
+ *       <glob>/app/libs/in-house-*.jar</glob>
+ *       <toLayer>in-house dependencies</toLayer>
+ *     </filter>
+ *   </filters>
+ * </configuration>
+ * }</pre>
+ */
 public class Configuration {
 
   public static class Filter {
-    // VisibleForTesting
-    String glob = "";
-    String moveIntoLayerName = "";
+    @VisibleForTesting String glob = "";
+    @VisibleForTesting String toLayer = "";
 
     String getGlob() {
       return glob;
     }
 
-    String getMoveIntoLayerName() {
-      return moveIntoLayerName;
+    String getToLayer() {
+      return toLayer;
     }
   }
 
-  // VisibleForTesting
-  List<Filter> filters = new ArrayList<>();
+  @VisibleForTesting List<Filter> filters = new ArrayList<>();
 
   List<Filter> getFilters() {
     return filters;

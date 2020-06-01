@@ -96,7 +96,7 @@ public class JibLayerFilterExtensionTest {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
     Configuration.Filter filter = new Configuration.Filter();
-    filter.moveIntoLayerName = "same layer name";
+    filter.toLayer = "same layer name";
     Configuration config = new Configuration();
     config.filters = Arrays.asList(filter);
 
@@ -108,7 +108,7 @@ public class JibLayerFilterExtensionTest {
       assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
       assertEquals(
           "moving files into built-in layer 'same layer name' is not supported; specify a new "
-              + "layer name in '<moveIntoLayerName>'.",
+              + "layer name in '<toLayer>'.",
           ex.getMessage());
     }
   }
@@ -121,7 +121,7 @@ public class JibLayerFilterExtensionTest {
 
     Configuration.Filter filter = new Configuration.Filter();
     filter.glob = "nothing/matches";
-    filter.moveIntoLayerName = "";
+    filter.toLayer = "";
     Configuration config = new Configuration();
     config.filters = Arrays.asList(filter);
 
@@ -190,19 +190,19 @@ public class JibLayerFilterExtensionTest {
 
     Configuration.Filter filter1 = new Configuration.Filter();
     filter1.glob = "/filter1";
-    filter1.moveIntoLayerName = "foo";
+    filter1.toLayer = "foo";
     Configuration.Filter filter2 = new Configuration.Filter();
     filter2.glob = "/filter2";
-    filter2.moveIntoLayerName = "same layer name";
+    filter2.toLayer = "same layer name";
     Configuration.Filter filter3 = new Configuration.Filter();
     filter3.glob = "/filter3";
-    filter3.moveIntoLayerName = "bar";
+    filter3.toLayer = "bar";
     Configuration.Filter filter4 = new Configuration.Filter();
     filter4.glob = "/filter4";
-    filter4.moveIntoLayerName = "same layer name";
+    filter4.toLayer = "same layer name";
     Configuration.Filter filter5 = new Configuration.Filter();
     filter5.glob = "/filter5";
-    filter5.moveIntoLayerName = "baz";
+    filter5.toLayer = "baz";
     Configuration config = new Configuration();
     config.filters = Arrays.asList(filter1, filter2, filter3, filter4, filter5);
 
@@ -211,7 +211,7 @@ public class JibLayerFilterExtensionTest {
         extension.extendContainerBuildPlan(
             buildPlan, properties, Optional.of(config), mavenData, logger);
 
-    ArrayList<String> layerNames = new ArrayList<>(extension.newMoveIntoLayers.keySet());
+    ArrayList<String> layerNames = new ArrayList<>(extension.newToLayers.keySet());
     assertEquals(Arrays.asList("foo", "same layer name", "bar", "baz"), layerNames);
 
     assertEquals(4, newPlan.getLayers().size());
@@ -238,10 +238,10 @@ public class JibLayerFilterExtensionTest {
 
     Configuration.Filter filter1 = new Configuration.Filter();
     filter1.glob = "**";
-    filter1.moveIntoLayerName = "looser";
+    filter1.toLayer = "looser";
     Configuration.Filter filter2 = new Configuration.Filter();
     filter2.glob = "**";
-    filter2.moveIntoLayerName = "winner";
+    filter2.toLayer = "winner";
     Configuration config = new Configuration();
     config.filters = Arrays.asList(filter1, filter2);
 
@@ -275,19 +275,19 @@ public class JibLayerFilterExtensionTest {
 
     Configuration.Filter filter1 = new Configuration.Filter();
     filter1.glob = "/alpha/**";
-    filter1.moveIntoLayerName = "alpha Alice";
+    filter1.toLayer = "alpha Alice";
     Configuration.Filter filter2 = new Configuration.Filter();
     filter2.glob = "/?????/*";
-    filter2.moveIntoLayerName = "alpha gamma";
+    filter2.toLayer = "alpha gamma";
     Configuration.Filter filter3 = new Configuration.Filter();
     filter3.glob = "**/Bob";
-    filter3.moveIntoLayerName = "Bob";
+    filter3.toLayer = "Bob";
     Configuration.Filter filter4 = new Configuration.Filter();
     filter4.glob = "/gamma/C*";
-    filter4.moveIntoLayerName = "gamma Charlie";
+    filter4.toLayer = "gamma Charlie";
     Configuration.Filter filter5 = new Configuration.Filter();
     filter5.glob = "**/Alice";
-    filter5.moveIntoLayerName = "alpha Alice";
+    filter5.toLayer = "alpha Alice";
     Configuration.Filter filter6 = new Configuration.Filter();
     filter6.glob = "**/David";
     Configuration config = new Configuration();

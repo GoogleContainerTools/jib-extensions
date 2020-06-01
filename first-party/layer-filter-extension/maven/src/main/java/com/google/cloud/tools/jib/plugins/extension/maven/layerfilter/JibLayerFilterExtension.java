@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,9 +43,8 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
   private Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
 
-  // (layer name, layer builder) map for new layers of configured <moveIntoLayerName>
-  @VisibleForTesting
-  Map<String, FileEntriesLayer.Builder> newMoveIntoLayers = new LinkedHashMap<>();
+  // (layer name, layer builder) map for new layers of configured <toLayer>
+  @VisibleForTesting Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
 
   @Override
   public Optional<Class<Configuration>> getExtraConfigType() {
@@ -67,43 +67,42 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     preparePathMatchersAndLayerBuilders(buildPlan, config.get());
 
+    ContainerBuildPlan.Builder newPlanBuilder = buildPlan.toBuilder();
+    newPlanBuilder.setLayers(Collections.emptyList());
+
     @SuppressWarnings("unchecked")
     List<FileEntriesLayer> originalLayers = (List<FileEntriesLayer>) buildPlan.getLayers();
-    List<FileEntriesLayer> filteredOriginalLayers = new ArrayList<>();
-
     // Start filtering original layers.
     for (FileEntriesLayer layer : originalLayers) {
       List<FileEntry> filesToKeep = new ArrayList<>();
 
       for (FileEntry entry : layer.getEntries()) {
         Optional<String> finalLayerName = determineFinalLayerName(entry, layer.getName());
-        // Either keep, move, or delete this fileEntry.
+        // Either keep, move, or delete this FileEntry.
         if (finalLayerName.isPresent()) {
           if (finalLayerName.get().equals(layer.getName())) {
             filesToKeep.add(entry);
           } else {
             FileEntriesLayer.Builder targetLayerBuilder =
-                Verify.verifyNotNull(newMoveIntoLayers.get(finalLayerName.get()));
+                Verify.verifyNotNull(newToLayers.get(finalLayerName.get()));
             targetLayerBuilder.addEntry(entry);
           }
         }
       }
 
       if (!filesToKeep.isEmpty()) {
-        filteredOriginalLayers.add(layer.toBuilder().setEntries(filesToKeep).build());
+        newPlanBuilder.addLayer(layer.toBuilder().setEntries(filesToKeep).build());
       }
     }
 
-    // Add filtered original layers first, then newly created non-empty layers (if any).
-    ContainerBuildPlan.Builder planBuilder = buildPlan.toBuilder();
-    planBuilder.setLayers(filteredOriginalLayers);
-    for (FileEntriesLayer.Builder layerBuilder : newMoveIntoLayers.values()) {
-      FileEntriesLayer newLayer = layerBuilder.build();
-      if (!newLayer.getEntries().isEmpty()) {
-        planBuilder.addLayer(layerBuilder.build());
-      }
-    }
-    return planBuilder.build();
+    // Add newly created non-empty to-layers (if any).
+    newToLayers
+        .values()
+        .stream()
+        .map(FileEntriesLayer.Builder::build)
+        .filter(layer -> !layer.getEntries().isEmpty())
+        .forEach(newPlanBuilder::addLayer);
+    return newPlanBuilder.build();
   }
 
   private void preparePathMatchersAndLayerBuilders(
@@ -112,13 +111,13 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
         buildPlan.getLayers().stream().map(LayerObject::getName).collect(Collectors.toList());
 
     for (Configuration.Filter filter : config.getFilters()) {
-      String targetLayerName = filter.getMoveIntoLayerName();
-      if (!targetLayerName.isEmpty() && originalLayerNames.contains(targetLayerName)) {
+      String toLayerName = filter.getToLayer();
+      if (!toLayerName.isEmpty() && originalLayerNames.contains(toLayerName)) {
         throw new JibPluginExtensionException(
             getClass(),
             "moving files into built-in layer '"
-                + targetLayerName
-                + "' is not supported; specify a new layer name in '<moveIntoLayerName>'.");
+                + toLayerName
+                + "' is not supported; specify a new layer name in '<toLayer>'.");
       }
       if (filter.getGlob().isEmpty()) {
         throw new JibPluginExtensionException(
@@ -126,11 +125,10 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       }
 
       pathMatchers.put(
-          FileSystems.getDefault().getPathMatcher("glob:" + filter.getGlob()),
-          filter.getMoveIntoLayerName());
+          FileSystems.getDefault().getPathMatcher("glob:" + filter.getGlob()), filter.getToLayer());
 
-      if (!newMoveIntoLayers.containsKey(targetLayerName)) {
-        newMoveIntoLayers.put(targetLayerName, FileEntriesLayer.builder().setName(targetLayerName));
+      if (!newToLayers.containsKey(toLayerName)) {
+        newToLayers.put(toLayerName, FileEntriesLayer.builder().setName(toLayerName));
       }
     }
   }
@@ -151,11 +149,11 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       PathMatcher matcher = mapEntry.getKey();
       Path pathInContainer = Paths.get(fileEntry.getExtractionPath().toString());
       if (matcher.matches(pathInContainer)) {
-        String moveIntoLayerName = mapEntry.getValue();
-        if (moveIntoLayerName.isEmpty()) {
+        String toLayerName = mapEntry.getValue();
+        if (toLayerName.isEmpty()) {
           finalLayerName = Optional.empty(); // Mark deletion.
         } else {
-          finalLayerName = Optional.of(moveIntoLayerName);
+          finalLayerName = Optional.of(toLayerName);
         }
       }
     }
