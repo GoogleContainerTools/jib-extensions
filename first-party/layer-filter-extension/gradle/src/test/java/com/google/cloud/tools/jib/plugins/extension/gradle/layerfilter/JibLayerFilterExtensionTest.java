@@ -29,7 +29,6 @@ import com.google.cloud.tools.jib.gradle.extension.GradleData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
-import com.google.cloud.tools.jib.plugins.extension.gradle.layerfilter.JibLayerFilterExtension;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
