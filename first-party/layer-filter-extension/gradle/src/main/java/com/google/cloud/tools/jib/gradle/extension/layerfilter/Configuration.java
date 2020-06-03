@@ -71,13 +71,13 @@ public class Configuration {
     }
   }
 
-  public static class FilterSpec {
+  public static class FiltersSpec {
 
     private final Project project;
     private final ListProperty<Filter> filters;
 
     @Inject
-    public FilterSpec(Project project) {
+    public FiltersSpec(Project project) {
       this.project = project;
       filters = project.getObjects().listProperty(Filter.class).empty();
     }
@@ -98,7 +98,7 @@ public class Configuration {
     }
   }
 
-  private final FilterSpec filterSpec;
+  private final FiltersSpec filtersSpec;
 
   /**
    * Constructor used to inject a Gradle project.
@@ -107,15 +107,15 @@ public class Configuration {
    */
   @Inject
   public Configuration(Project project) {
-    filterSpec = project.getObjects().newInstance(FilterSpec.class, project);
+    filtersSpec = project.getObjects().newInstance(FiltersSpec.class, project);
   }
 
   @Nested
   public List<Filter> getFilters() {
-    return filterSpec.getFilters().get();
+    return filtersSpec.getFilters().get();
   }
 
-  public void filters(Action<? super FilterSpec> action) {
-    action.execute(filterSpec);
+  public void filters(Action<? super FiltersSpec> action) {
+    action.execute(filtersSpec);
   }
 }
