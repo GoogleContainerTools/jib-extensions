@@ -19,7 +19,9 @@ package com.google.cloud.tools.jib.plugins.extension.maven.layerfilter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
@@ -44,6 +46,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class JibLayerFilterExtensionTest {
 
+  @Mock private Configuration config;
   @Mock private MavenData mavenData;
   @Mock private ExtensionLogger logger;
 
@@ -78,8 +81,12 @@ public class JibLayerFilterExtensionTest {
   @Test
   public void testExtendContainerBuildPlan_noGlobGiven() {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(new Configuration.Filter());
+
+    Configuration.Filter filter = mock(Configuration.Filter.class);
+    when(filter.getGlob()).thenReturn("");
+    when(filter.getToLayer()).thenReturn("doesn't matter");
+    when(config.getFilters()).thenReturn(Arrays.asList(filter));
+
     try {
       new JibLayerFilterExtension()
           .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
@@ -95,10 +102,9 @@ public class JibLayerFilterExtensionTest {
     FileEntriesLayer layer = buildLayer("same layer name", Arrays.asList("/foo"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
-    Configuration.Filter filter = new Configuration.Filter();
-    filter.toLayer = "same layer name";
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(filter);
+    Configuration.Filter filter = mock(Configuration.Filter.class);
+    when(filter.getToLayer()).thenReturn("same layer name");
+    when(config.getFilters()).thenReturn(Arrays.asList(filter));
 
     try {
       new JibLayerFilterExtension()
@@ -119,11 +125,10 @@ public class JibLayerFilterExtensionTest {
     FileEntriesLayer layer = buildLayer("" /* deliberately empty */, Arrays.asList("/foo"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
-    Configuration.Filter filter = new Configuration.Filter();
-    filter.glob = "nothing/matches";
-    filter.toLayer = "";
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(filter);
+    Configuration.Filter filter = mock(Configuration.Filter.class);
+    when(filter.getGlob()).thenReturn("nothing/matches");
+    when(filter.getToLayer()).thenReturn("");
+    when(config.getFilters()).thenReturn(Arrays.asList(filter));
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
@@ -141,10 +146,10 @@ public class JibLayerFilterExtensionTest {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
-    Configuration.Filter filter = new Configuration.Filter();
-    filter.glob = "nothing/matches";
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(filter);
+    Configuration.Filter filter = mock(Configuration.Filter.class);
+    when(filter.getGlob()).thenReturn("nothing/matches");
+    when(filter.getToLayer()).thenReturn("");
+    when(config.getFilters()).thenReturn(Arrays.asList(filter));
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
@@ -168,10 +173,10 @@ public class JibLayerFilterExtensionTest {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
-    Configuration.Filter filter = new Configuration.Filter();
-    filter.glob = "**";
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(filter);
+    Configuration.Filter filter = mock(Configuration.Filter.class);
+    when(filter.getGlob()).thenReturn("**");
+    when(filter.getToLayer()).thenReturn("");
+    when(config.getFilters()).thenReturn(Arrays.asList(filter));
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
@@ -188,23 +193,23 @@ public class JibLayerFilterExtensionTest {
         buildLayer("", Arrays.asList("/filter1", "/filter2", "/filter3", "/filter4", "/filter5"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
-    Configuration.Filter filter1 = new Configuration.Filter();
-    filter1.glob = "/filter1";
-    filter1.toLayer = "foo";
-    Configuration.Filter filter2 = new Configuration.Filter();
-    filter2.glob = "/filter2";
-    filter2.toLayer = "same layer name";
-    Configuration.Filter filter3 = new Configuration.Filter();
-    filter3.glob = "/filter3";
-    filter3.toLayer = "bar";
-    Configuration.Filter filter4 = new Configuration.Filter();
-    filter4.glob = "/filter4";
-    filter4.toLayer = "same layer name";
-    Configuration.Filter filter5 = new Configuration.Filter();
-    filter5.glob = "/filter5";
-    filter5.toLayer = "baz";
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(filter1, filter2, filter3, filter4, filter5);
+    Configuration.Filter filter1 = mock(Configuration.Filter.class);
+    when(filter1.getGlob()).thenReturn("/filter1");
+    when(filter1.getToLayer()).thenReturn("foo");
+    Configuration.Filter filter2 = mock(Configuration.Filter.class);
+    when(filter2.getGlob()).thenReturn("/filter2");
+    when(filter2.getToLayer()).thenReturn("same layer name");
+    Configuration.Filter filter3 = mock(Configuration.Filter.class);
+    when(filter3.getGlob()).thenReturn("/filter3");
+    when(filter3.getToLayer()).thenReturn("bar");
+    Configuration.Filter filter4 = mock(Configuration.Filter.class);
+    when(filter4.getGlob()).thenReturn("/filter4");
+    when(filter4.getToLayer()).thenReturn("same layer name");
+    Configuration.Filter filter5 = mock(Configuration.Filter.class);
+    when(filter5.getGlob()).thenReturn("/filter5");
+    when(filter5.getToLayer()).thenReturn("baz");
+    when(config.getFilters())
+        .thenReturn(Arrays.asList(filter1, filter2, filter3, filter4, filter5));
 
     JibLayerFilterExtension extension = new JibLayerFilterExtension();
     ContainerBuildPlan newPlan =
@@ -236,14 +241,13 @@ public class JibLayerFilterExtensionTest {
     FileEntriesLayer layer = buildLayer("extra files", Arrays.asList("/foo"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
-    Configuration.Filter filter1 = new Configuration.Filter();
-    filter1.glob = "**";
-    filter1.toLayer = "looser";
-    Configuration.Filter filter2 = new Configuration.Filter();
-    filter2.glob = "**";
-    filter2.toLayer = "winner";
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(filter1, filter2);
+    Configuration.Filter filter1 = mock(Configuration.Filter.class);
+    when(filter1.getGlob()).thenReturn("**");
+    when(filter1.getToLayer()).thenReturn("looser");
+    Configuration.Filter filter2 = mock(Configuration.Filter.class);
+    when(filter2.getGlob()).thenReturn("**");
+    when(filter2.getToLayer()).thenReturn("winner");
+    when(config.getFilters()).thenReturn(Arrays.asList(filter1, filter2));
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
@@ -273,25 +277,26 @@ public class JibLayerFilterExtensionTest {
             .setLayers(Arrays.asList(layer1, layer2, layer3, layer4))
             .build();
 
-    Configuration.Filter filter1 = new Configuration.Filter();
-    filter1.glob = "/alpha/**";
-    filter1.toLayer = "alpha Alice";
-    Configuration.Filter filter2 = new Configuration.Filter();
-    filter2.glob = "/?????/*";
-    filter2.toLayer = "alpha gamma";
-    Configuration.Filter filter3 = new Configuration.Filter();
-    filter3.glob = "**/Bob";
-    filter3.toLayer = "Bob";
-    Configuration.Filter filter4 = new Configuration.Filter();
-    filter4.glob = "/gamma/C*";
-    filter4.toLayer = "gamma Charlie";
-    Configuration.Filter filter5 = new Configuration.Filter();
-    filter5.glob = "**/Alice";
-    filter5.toLayer = "alpha Alice";
-    Configuration.Filter filter6 = new Configuration.Filter();
-    filter6.glob = "**/David";
-    Configuration config = new Configuration();
-    config.filters = Arrays.asList(filter1, filter2, filter3, filter4, filter5, filter6);
+    Configuration.Filter filter1 = mock(Configuration.Filter.class);
+    when(filter1.getGlob()).thenReturn("/alpha/**");
+    when(filter1.getToLayer()).thenReturn("alpha Alice");
+    Configuration.Filter filter2 = mock(Configuration.Filter.class);
+    when(filter2.getGlob()).thenReturn("/?????/*");
+    when(filter2.getToLayer()).thenReturn("alpha gamma");
+    Configuration.Filter filter3 = mock(Configuration.Filter.class);
+    when(filter3.getGlob()).thenReturn("**/Bob");
+    when(filter3.getToLayer()).thenReturn("Bob");
+    Configuration.Filter filter4 = mock(Configuration.Filter.class);
+    when(filter4.getGlob()).thenReturn("/gamma/C*");
+    when(filter4.getToLayer()).thenReturn("gamma Charlie");
+    Configuration.Filter filter5 = mock(Configuration.Filter.class);
+    when(filter5.getGlob()).thenReturn("**/Alice");
+    when(filter5.getToLayer()).thenReturn("alpha Alice");
+    Configuration.Filter filter6 = mock(Configuration.Filter.class);
+    when(filter6.getGlob()).thenReturn("**/David");
+    when(filter6.getToLayer()).thenReturn("");
+    when(config.getFilters())
+        .thenReturn(Arrays.asList(filter1, filter2, filter3, filter4, filter5, filter6));
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()

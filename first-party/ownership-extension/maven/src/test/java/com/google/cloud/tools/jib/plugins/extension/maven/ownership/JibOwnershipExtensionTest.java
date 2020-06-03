@@ -19,7 +19,9 @@ package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
@@ -44,6 +46,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class JibOwnershipExtensionTest {
 
+  @Mock private Configuration config;
   @Mock private MavenData mavenData;
   @Mock private ExtensionLogger logger;
 
@@ -67,8 +70,11 @@ public class JibOwnershipExtensionTest {
   @Test
   public void testExtendContainerBuildPlan_noGlobGiven() {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
-    Configuration config = new Configuration();
-    config.rules = Arrays.asList(new Configuration.Rule());
+
+    Configuration.Rule rule = mock(Configuration.Rule.class);
+    when(rule.getGlob()).thenReturn("");
+    when(config.getRules()).thenReturn(Arrays.asList(rule));
+
     try {
       new JibOwnershipExtension()
           .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
@@ -102,14 +108,13 @@ public class JibOwnershipExtensionTest {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
-    Configuration.Rule rule1 = new Configuration.Rule();
-    rule1.glob = "/target/**";
-    rule1.ownership = "10:20";
-    Configuration.Rule rule2 = new Configuration.Rule();
-    rule2.glob = "**/bar";
-    rule2.ownership = "999:777";
-    Configuration config = new Configuration();
-    config.rules = Arrays.asList(rule1, rule2);
+    Configuration.Rule rule1 = mock(Configuration.Rule.class);
+    when(rule1.getGlob()).thenReturn("/target/**");
+    when(rule1.getOwnership()).thenReturn("10:20");
+    Configuration.Rule rule2 = mock(Configuration.Rule.class);
+    when(rule2.getGlob()).thenReturn("**/bar");
+    when(rule2.getOwnership()).thenReturn("999:777");
+    when(config.getRules()).thenReturn(Arrays.asList(rule1, rule2));
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
@@ -154,14 +159,13 @@ public class JibOwnershipExtensionTest {
             .build();
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
-    Configuration.Rule rule1 = new Configuration.Rule();
-    rule1.glob = "**";
-    rule1.ownership = "10:20";
-    Configuration.Rule rule2 = new Configuration.Rule();
-    rule2.glob = "**";
-    rule2.ownership = "999:777";
-    Configuration config = new Configuration();
-    config.rules = Arrays.asList(rule1, rule2);
+    Configuration.Rule rule1 = mock(Configuration.Rule.class);
+    when(rule1.getGlob()).thenReturn("**");
+    when(rule1.getOwnership()).thenReturn("10:20");
+    Configuration.Rule rule2 = mock(Configuration.Rule.class);
+    when(rule2.getGlob()).thenReturn("**");
+    when(rule2.getOwnership()).thenReturn("999:777");
+    when(config.getRules()).thenReturn(Arrays.asList(rule1, rule2));
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
