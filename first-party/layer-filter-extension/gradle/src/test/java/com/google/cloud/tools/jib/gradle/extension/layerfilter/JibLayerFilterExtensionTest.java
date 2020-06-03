@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.gradle.layerfilter;
+package com.google.cloud.tools.jib.gradle.extension.layerfilter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;

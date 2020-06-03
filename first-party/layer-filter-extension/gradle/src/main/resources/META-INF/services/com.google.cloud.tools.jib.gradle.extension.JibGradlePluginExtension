@@ -1,1 +1,1 @@
-com.google.cloud.tools.jib.plugins.extension.gradle.layerfilter.JibLayerFilterExtension
+com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension

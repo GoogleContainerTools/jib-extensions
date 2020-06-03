@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.gradle.layerfilter;
+package com.google.cloud.tools.jib.gradle.extension.layerfilter;
 
 import java.util.List;
 import javax.inject.Inject;
