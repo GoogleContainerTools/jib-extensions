@@ -19,7 +19,7 @@ Die() {
 DieUsage() {
   EchoRed "Usage: ./scripts/prepare_release.sh <extension project> <release version> [<post-release-version>]"
   EchoRed
-  EchoRed "Example: ./scripts/prepare_release.sh jib-layer-filter-extension-gradle 0.2.0
+  EchoRed "Example: ./scripts/prepare_release.sh jib-layer-filter-extension-gradle 0.2.0"
   exit 1
 }
 
