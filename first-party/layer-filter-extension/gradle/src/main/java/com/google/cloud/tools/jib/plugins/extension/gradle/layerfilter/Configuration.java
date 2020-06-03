@@ -65,6 +65,11 @@ public class Configuration {
 
   public class FilterSpec {
 
+    /**
+     * Adds a new filter configuration to the filters list.
+     *
+     * @param action closure representing a filter configuration
+     */
     public void filter(Action<? super Filter> action) {
       Filter filter = project.getObjects().newInstance(Filter.class);
       action.execute(filter);
@@ -76,6 +81,11 @@ public class Configuration {
   private final FilterSpec filterSpec;
   private final ListProperty<Filter> filters;
 
+  /**
+   * Constructor used to inject a Gradle project.
+   *
+   * @param project the injected Gradle project
+   */
   @Inject
   public Configuration(Project project) {
     this.project = project;
