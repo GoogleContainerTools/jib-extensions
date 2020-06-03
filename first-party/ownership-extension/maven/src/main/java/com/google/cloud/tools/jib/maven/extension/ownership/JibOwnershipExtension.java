@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
+package com.google.cloud.tools.jib.maven.extension.ownership;
 
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;

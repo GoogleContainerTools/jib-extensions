@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
+package com.google.cloud.tools.jib.maven.extension.ownership;
 
 import java.util.ArrayList;
 import java.util.List;
