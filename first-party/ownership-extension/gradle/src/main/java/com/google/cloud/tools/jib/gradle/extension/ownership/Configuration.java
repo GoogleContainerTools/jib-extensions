@@ -16,29 +16,34 @@
 
 package com.google.cloud.tools.jib.gradle.extension.ownership;
 
-import java.util.ArrayList;
 import java.util.List;
+import javax.inject.Inject;
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 
 /**
- * Extension-specific Maven configuration.
+ * Extension-specific Gradle configuration.
  *
- * <p>Example usage in {@code pom.xml}:
+ * <p>Example usage in {@code build.gradle}:
  *
  * <pre>{@code
- * <configuration implementation="com.google.cloud.tools.jib.plugins.extension.maven.ownership.Configuration">
- *   <rules>
- *     <!-- sets UID 300 for all files under /app/classes/ -->
- *     <rule>
- *       <glob>/app/classes/**</glob>
- *       <ownership>300</ownership>
- *     </rule>
- *     <!-- sets UID 300 and GID 500 for all files under /static/ -->
- *     <rule>
- *       <glob>/static/**</glob>
- *       <ownership>300:500</ownership>
- *     </rule>
- *   </rules>
- * </configuration>
+ * configuration {
+ *   rules {
+ *     // sets UID 300 for all files under /app/classes/
+ *     rule {
+ *       glob = '/app/classes/**'
+ *       ownership = '300'
+ *     }
+ *     // sets UID 300 and GID 500 for all files under /static/
+ *     rule {
+ *       glob = '/static/**'
+ *       ownership = '300:500'
+ *     }
+ *   }
+ * }
  * }</pre>
  */
 public class Configuration {
@@ -47,18 +52,53 @@ public class Configuration {
     private String glob = "";
     private String ownership = "";
 
+    @Input
     public String getGlob() {
       return glob;
     }
 
+    @Input
+    @Optional
     public String getOwnership() {
       return ownership;
     }
   }
 
-  private List<Rule> rules = new ArrayList<>();
+  public class RuleSpec {
+
+    /**
+     * Adds a new rule configuration to the rules list.
+     *
+     * @param action closure representing a rule configuration
+     */
+    public void rule(Action<? super Rule> action) {
+      Rule filter = project.getObjects().newInstance(Rule.class);
+      action.execute(filter);
+      rules.add(filter);
+    }
+  }
+
+  private final Project project;
+  private final RuleSpec ruleSpec;
+  private final ListProperty<Rule> rules;
+
+  /**
+   * Constructor used to inject a Gradle project.
+   *
+   * @param project the injected Gradle project
+   */
+  @Inject
+  public Configuration(Project project) {
+    this.project = project;
+    ruleSpec = project.getObjects().newInstance(RuleSpec.class);
+    rules = project.getObjects().listProperty(Rule.class).empty();
+  }
 
   public List<Rule> getRules() {
-    return rules;
+    return rules.get();
+  }
+
+  public void filters(Action<? super RuleSpec> action) {
+    action.execute(ruleSpec);
   }
 }
