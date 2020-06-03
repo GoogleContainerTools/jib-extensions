@@ -45,9 +45,9 @@ publishing {
 
 // Release plugin (git release commits and version updates)
 release {
-  tagTemplate = 'v$version-layer-filter-maven'
+  tagTemplate = 'v$version-jib-layer-filter-maven'
   git {
-    requireBranch = /^layer_filter_maven_release_v\d+.*$/  //regex
+    requireBranch = /^jib-layer-filter-maven-release-v\d+.*$/  //regex
   }
 }
 /* RELEASE */
