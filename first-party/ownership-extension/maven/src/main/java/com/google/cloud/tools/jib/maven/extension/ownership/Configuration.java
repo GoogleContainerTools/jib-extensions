@@ -14,9 +14,8 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
+package com.google.cloud.tools.jib.maven.extension.ownership;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,21 +44,21 @@ import java.util.List;
 public class Configuration {
 
   public static class Rule {
-    @VisibleForTesting String glob = "";
-    @VisibleForTesting String ownership = "";
+    private String glob = "";
+    private String ownership = "";
 
-    String getGlob() {
+    public String getGlob() {
       return glob;
     }
 
-    String getOwnership() {
+    public String getOwnership() {
       return ownership;
     }
   }
 
-  @VisibleForTesting List<Rule> rules = new ArrayList<>();
+  private List<Rule> rules = new ArrayList<>();
 
-  List<Rule> getRules() {
+  public List<Rule> getRules() {
     return rules;
   }
 }

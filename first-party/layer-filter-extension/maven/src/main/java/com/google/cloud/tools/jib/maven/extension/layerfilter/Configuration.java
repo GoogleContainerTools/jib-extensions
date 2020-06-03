@@ -14,9 +14,8 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.layerfilter;
+package com.google.cloud.tools.jib.maven.extension.layerfilter;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,21 +42,21 @@ import java.util.List;
 public class Configuration {
 
   public static class Filter {
-    @VisibleForTesting String glob = "";
-    @VisibleForTesting String toLayer = "";
+    private String glob = "";
+    private String toLayer = "";
 
-    String getGlob() {
+    public String getGlob() {
       return glob;
     }
 
-    String getToLayer() {
+    public String getToLayer() {
       return toLayer;
     }
   }
 
-  @VisibleForTesting List<Filter> filters = new ArrayList<>();
+  private List<Filter> filters = new ArrayList<>();
 
-  List<Filter> getFilters() {
+  public List<Filter> getFilters() {
     return filters;
   }
 }
