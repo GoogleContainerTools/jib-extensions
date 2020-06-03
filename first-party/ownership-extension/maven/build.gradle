@@ -15,10 +15,10 @@ dependencies {
 jar {
   manifest {
     attributes 'Implementation-Version': version
-    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.plugins.extension.maven.ownership'
+    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.maven.extension.ownership'
 
     // OSGi metadata
-    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.plugins.extension.maven.ownership'
+    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.maven.extension.ownership'
     attributes 'Bundle-Name': 'Ownership Extension for Jib Maven Plugin'
     attributes 'Bundle-Vendor': 'Google LLC'
     attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'

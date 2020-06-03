@@ -16,10 +16,10 @@ dependencies {
 jar {
   manifest {
     attributes 'Implementation-Version': version
-    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.plugins.extension.maven.layerfilter'
+    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.maven.extension.layerfilter'
 
     // OSGi metadata
-    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.plugins.extension.maven.layerfilter'
+    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.maven.extension.layerfilter'
     attributes 'Bundle-Name': 'Layer Filter Extension for Jib Maven Plugin'
     attributes 'Bundle-Vendor': 'Google LLC'
     attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'

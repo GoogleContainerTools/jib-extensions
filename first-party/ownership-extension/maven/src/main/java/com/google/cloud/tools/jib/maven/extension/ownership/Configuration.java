@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.ownership;
+package com.google.cloud.tools.jib.maven.extension.ownership;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.List;
  * <p>Example usage in {@code pom.xml}:
  *
  * <pre>{@code
- * <configuration implementation="com.google.cloud.tools.jib.plugins.extension.maven.ownership.Configuration">
+ * <configuration implementation="com.google.cloud.tools.jib.maven.extension.ownership.Configuration">
  *   <rules>
  *     <!-- sets UID 300 for all files under /app/classes/ -->
  *     <rule>

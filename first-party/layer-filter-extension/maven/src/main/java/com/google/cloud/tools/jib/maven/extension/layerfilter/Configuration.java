@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.layerfilter;
+package com.google.cloud.tools.jib.maven.extension.layerfilter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +25,10 @@ import java.util.List;
  * <p>Example usage in {@code pom.xml}:
  *
  * <pre>{@code
- * <configuration implementation="com.google.cloud.tools.jib.plugins.extension.maven.layerfilter.Configuration">
+ * <configuration implementation="com.google.cloud.tools.jib.maven.extension.layerfilter.Configuration">
  *   <filters>
  *     <filter>
- *       <glob>**&#47;google-*</glob>
+ *       <glob>**&#47;google-*.jar</glob>
  *       <toLayer>google libraries</toLayer>
  *     </filter>
  *     <filter>

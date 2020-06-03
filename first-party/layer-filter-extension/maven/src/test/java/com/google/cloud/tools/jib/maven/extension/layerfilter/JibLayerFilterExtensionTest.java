@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.tools.jib.plugins.extension.maven.layerfilter;
+package com.google.cloud.tools.jib.maven.extension.layerfilter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
