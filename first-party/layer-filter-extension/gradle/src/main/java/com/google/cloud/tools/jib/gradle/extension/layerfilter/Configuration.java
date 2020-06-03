@@ -34,7 +34,7 @@ import org.gradle.api.tasks.Optional;
  * configuration {
  *   filters {
  *     filter {
- *       glob = '**&#47;google-*'
+ *       glob = '**&#47;google-*.jar'
  *       toLayer = 'google libraries'
  *     }
  *     filter {
@@ -56,14 +56,35 @@ public class Configuration {
       return glob;
     }
 
+    public void setGlob(String glob) {
+      this.glob = glob;
+    }
+
     @Input
     @Optional
     public String getToLayer() {
       return toLayer;
     }
+
+    public void setToLayer(String toLayer) {
+      this.toLayer = toLayer;
+    }
   }
 
-  public class FilterSpec {
+  public static class FilterSpec {
+
+    private final Project project;
+    private final ListProperty<Filter> filters;
+
+    @Inject
+    public FilterSpec(Project project) {
+      this.project = project;
+      filters = project.getObjects().listProperty(Filter.class).empty();
+    }
+
+    private ListProperty<Filter> getFilters() {
+      return filters;
+    }
 
     /**
      * Adds a new filter configuration to the filters list.
@@ -77,9 +98,7 @@ public class Configuration {
     }
   }
 
-  private final Project project;
   private final FilterSpec filterSpec;
-  private final ListProperty<Filter> filters;
 
   /**
    * Constructor used to inject a Gradle project.
@@ -88,14 +107,12 @@ public class Configuration {
    */
   @Inject
   public Configuration(Project project) {
-    this.project = project;
-    filterSpec = project.getObjects().newInstance(FilterSpec.class);
-    filters = project.getObjects().listProperty(Filter.class).empty();
+    filterSpec = project.getObjects().newInstance(FilterSpec.class, project);
   }
 
   @Nested
   public List<Filter> getFilters() {
-    return filters.get();
+    return filterSpec.getFilters().get();
   }
 
   public void filters(Action<? super FilterSpec> action) {
