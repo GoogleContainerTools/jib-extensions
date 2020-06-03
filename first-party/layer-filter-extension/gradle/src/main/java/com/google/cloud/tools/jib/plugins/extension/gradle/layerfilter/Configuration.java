@@ -16,9 +16,14 @@
 
 package com.google.cloud.tools.jib.plugins.extension.gradle.layerfilter;
 
-import com.google.common.annotations.VisibleForTesting;
-import java.util.ArrayList;
 import java.util.List;
+import javax.inject.Inject;
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
 
 /**
  * Extension-specific Gradle configuration.
@@ -43,21 +48,47 @@ import java.util.List;
 public class Configuration {
 
   public static class Filter {
-    @VisibleForTesting String glob = "";
-    @VisibleForTesting String toLayer = "";
+    private String glob = "";
+    private String toLayer = "";
 
-    String getGlob() {
+    @Input
+    public String getGlob() {
       return glob;
     }
 
-    String getToLayer() {
+    @Input
+    @Optional
+    public String getToLayer() {
       return toLayer;
     }
   }
 
-  @VisibleForTesting List<Filter> filters = new ArrayList<>();
+  public class FilterSpec {
 
-  List<Filter> getFilters() {
-    return filters;
+    public void filter(Action<? super Filter> action) {
+      Filter filter = project.getObjects().newInstance(Filter.class);
+      action.execute(filter);
+      filters.add(filter);
+    }
+  }
+
+  private final Project project;
+  private final FilterSpec filterSpec;
+  private final ListProperty<Filter> filters;
+
+  @Inject
+  public Configuration(Project project) {
+    this.project = project;
+    filterSpec = project.getObjects().newInstance(FilterSpec.class);
+    filters = project.getObjects().listProperty(Filter.class).empty();
+  }
+
+  @Nested
+  public List<Filter> getFilters() {
+    return filters.get();
+  }
+
+  public void filters(Action<? super FilterSpec> action) {
+    action.execute(filterSpec);
   }
 }
