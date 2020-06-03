@@ -57,14 +57,35 @@ public class Configuration {
       return glob;
     }
 
+    public void setGlob(String glob) {
+      this.glob = glob;
+    }
+
     @Input
     @Optional
     public String getOwnership() {
       return ownership;
     }
+
+    public void setOwnership(String ownership) {
+      this.ownership = ownership;
+    }
   }
 
-  public class RuleSpec {
+  public static class RulesSpec {
+
+    private final Project project;
+    private final ListProperty<Rule> rules;
+
+    @Inject
+    public RulesSpec(Project project) {
+      this.project = project;
+      rules = project.getObjects().listProperty(Rule.class).empty();
+    }
+
+    private ListProperty<Rule> getRules() {
+      return rules;
+    }
 
     /**
      * Adds a new rule configuration to the rules list.
@@ -78,9 +99,7 @@ public class Configuration {
     }
   }
 
-  private final Project project;
-  private final RuleSpec ruleSpec;
-  private final ListProperty<Rule> rules;
+  private final RulesSpec rulesSpec;
 
   /**
    * Constructor used to inject a Gradle project.
@@ -89,16 +108,14 @@ public class Configuration {
    */
   @Inject
   public Configuration(Project project) {
-    this.project = project;
-    ruleSpec = project.getObjects().newInstance(RuleSpec.class);
-    rules = project.getObjects().listProperty(Rule.class).empty();
+    rulesSpec = project.getObjects().newInstance(RulesSpec.class, project);
   }
 
   public List<Rule> getRules() {
-    return rules.get();
+    return rulesSpec.getRules().get();
   }
 
-  public void filters(Action<? super RuleSpec> action) {
-    action.execute(ruleSpec);
+  public void rules(Action<? super RulesSpec> action) {
+    action.execute(rulesSpec);
   }
 }
