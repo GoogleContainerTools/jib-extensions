@@ -34,7 +34,7 @@ import org.gradle.api.tasks.Optional;
  * configuration {
  *   filters {
  *     filter {
- *       glob = '**&#47;google-*'
+ *       glob = '**&#47;google-*.jar'
  *       toLayer = 'google libraries'
  *     }
  *     filter {
