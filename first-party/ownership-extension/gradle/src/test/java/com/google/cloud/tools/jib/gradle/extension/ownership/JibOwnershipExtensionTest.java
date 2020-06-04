@@ -57,6 +57,13 @@ public class JibOwnershipExtensionTest {
     return layer.getEntries().stream().map(mapper).collect(Collectors.toList());
   }
 
+  private static Configuration.Rule mockRule(String glob, String ownership) {
+    Configuration.Rule filter = mock(Configuration.Rule.class);
+    when(filter.getGlob()).thenReturn(glob);
+    when(filter.getOwnership()).thenReturn(ownership);
+    return filter;
+  }
+
   @Test
   public void testExtendContainerBuildPlan_noConfiguration() throws JibPluginExtensionException {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
@@ -71,8 +78,7 @@ public class JibOwnershipExtensionTest {
   public void testExtendContainerBuildPlan_noGlobGiven() {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
 
-    Configuration.Rule rule = mock(Configuration.Rule.class);
-    when(rule.getGlob()).thenReturn("");
+    Configuration.Rule rule = mockRule("", "doesn't matter");
     when(config.getRules()).thenReturn(Arrays.asList(rule));
 
     try {
@@ -108,12 +114,8 @@ public class JibOwnershipExtensionTest {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
-    Configuration.Rule rule1 = mock(Configuration.Rule.class);
-    when(rule1.getGlob()).thenReturn("/target/**");
-    when(rule1.getOwnership()).thenReturn("10:20");
-    Configuration.Rule rule2 = mock(Configuration.Rule.class);
-    when(rule2.getGlob()).thenReturn("**/bar");
-    when(rule2.getOwnership()).thenReturn("999:777");
+    Configuration.Rule rule1 = mockRule("/target/**", "10:20");
+    Configuration.Rule rule2 = mockRule("**/bar", "999:777");
     when(config.getRules()).thenReturn(Arrays.asList(rule1, rule2));
 
     ContainerBuildPlan newPlan =
@@ -159,12 +161,8 @@ public class JibOwnershipExtensionTest {
             .build();
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
 
-    Configuration.Rule rule1 = mock(Configuration.Rule.class);
-    when(rule1.getGlob()).thenReturn("**");
-    when(rule1.getOwnership()).thenReturn("10:20");
-    Configuration.Rule rule2 = mock(Configuration.Rule.class);
-    when(rule2.getGlob()).thenReturn("**");
-    when(rule2.getOwnership()).thenReturn("999:777");
+    Configuration.Rule rule1 = mockRule("**", "10:20");
+    Configuration.Rule rule2 = mockRule("**", "999:777");
     when(config.getRules()).thenReturn(Arrays.asList(rule1, rule2));
 
     ContainerBuildPlan newPlan =
