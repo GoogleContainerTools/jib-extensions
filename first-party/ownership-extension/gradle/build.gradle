@@ -45,9 +45,9 @@ publishing {
 
 // Release plugin (git release commits and version updates)
 release {
-  tagTemplate = 'v$version-ownership-gradle'
+  tagTemplate = 'v$version-jib-ownership-extension-gradle'
   git {
-    requireBranch = /^ownership_gradle_release_v\d+.*$/  //regex
+    requireBranch = /^jib-ownership-extension-gradle-release-v\d+.*$/  //regex
   }
 }
 /* RELEASE */
