@@ -3,7 +3,7 @@
 This repository contains extensions to the
 [Jib](https://github.com/GoogleContainerTools/jib) Maven and Gradle build plugins.
 
-Jib extensions are supported from Jib Maven 2.3.0 and Jib Gradle 2.4.0.
+The Jib Extension Framework enables anyone to easily extend and tailor the Jib plugins behavior to their liking. Jib extensions are supported from Jib Maven 2.3.0 and Jib Gradle 2.4.0.
 
 - [1st-party extensions](first-party): extensions developed and maintained by the Jib team
 - [3rd-party extensions](third-party): links to externally developed extensions
