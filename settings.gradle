@@ -1,8 +1,0 @@
-include ':jib-ownership-extension-maven'
-project(':jib-ownership-extension-maven').projectDir = new File('first-party/ownership-extension/maven')
-include ':jib-ownership-extension-gradle'
-project(':jib-ownership-extension-gradle').projectDir = new File('first-party/ownership-extension/gradle')
-include ':jib-layer-filter-extension-maven'
-project(':jib-layer-filter-extension-maven').projectDir = new File('first-party/layer-filter-extension/maven')
-include ':jib-layer-filter-extension-gradle'
-project(':jib-layer-filter-extension-gradle').projectDir = new File('first-party/layer-filter-extension/gradle')

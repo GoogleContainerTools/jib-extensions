@@ -1,0 +1,4 @@
+include ':jib-ownership-extension-maven'
+include ':jib-ownership-extension-gradle'
+include ':jib-layer-filter-extension-maven'
+include ':jib-layer-filter-extension-gradle'

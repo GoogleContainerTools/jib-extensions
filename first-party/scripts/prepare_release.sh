@@ -1,8 +1,11 @@
 #!/bin/bash -
-# Usage: ./scripts/prepare_release.sh <extension project> <release version>
-# Example: ./scripts/prepare_release.sh jib-layer-filter-extension-gradle 0.2.0
+# Usage: prepare_release.sh <extension project> <release version>
+# Example: prepare_release.sh jib-layer-filter-extension-gradle 0.2.0
 
 set -o errexit
+
+# cd into first_party/ (parent of this script directory)
+cd $( dirname "${BASH_SOURCE[0]}" )/..
 
 EchoRed() {
   echo "$(tput setaf 1; tput bold)$1$(tput sgr0)"
@@ -17,9 +20,9 @@ Die() {
 }
 
 DieUsage() {
-  EchoRed "Usage: ./scripts/prepare_release.sh <extension project> <release version> [<post-release-version>]"
+  EchoRed "Usage: prepare_release.sh <extension project> <release version> [<post-release-version>]"
   EchoRed
-  EchoRed "Example: ./scripts/prepare_release.sh jib-layer-filter-extension-gradle 0.2.0"
+  EchoRed "Example: prepare_release.sh jib-layer-filter-extension-gradle 0.2.0"
   exit 1
 }
 

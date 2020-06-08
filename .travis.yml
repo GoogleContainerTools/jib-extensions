@@ -16,6 +16,7 @@ env:
 
 install: true
 script:
+- cd first-party
 - ./gradlew clean build --stacktrace
 
 # cobbled together from
