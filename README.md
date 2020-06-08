@@ -44,7 +44,7 @@ The following example adds and runs the [Jib Layer-Filter Extension](first-party
   </plugin>
 ```
 
-When properly configured, Jib will log extension classes loaded.
+When properly configured and loaded, Jib outputs loaded extension in the log. When you configure multiple `<pluginExtension>`s, Jib runs the extensions in the given order.
 ```
 [INFO] --- jib-maven-plugin:2.3.0:build (default-cli) @ helloworld ---
 [INFO] Running extension: com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension
@@ -108,6 +108,11 @@ jib {
 }
 ```
 
+When properly configured and loaded, Jib outputs loaded extension in the log. When you configure multiple `jib.pluginExtension`s, Jib runs the extensions in the given order.
+```
+Running extension: com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension
+```
+
 Some extensions may expect you to provide extension-specific user configuration.
 
 - For extensions that accept simple string properties (map), use `<pluginExtension><properties>`. For example,
@@ -162,7 +167,7 @@ It is easy to write an extension! If you have written a useful extension, let us
      compileOnly 'com.google.cloud.tools:jib-gradle-plugin-extension-api:0.3.0'
    }
    ```
-2. Add a text file `src/main/resources/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension` (Maven) / `src/main/resources/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension` (Gradle) and list your classes that will implement the Jib Maven/Gradle Plugin Extension API below. See the [Maven](first-party/jib-ownership-extension-maven/src/main/resources/META-INF/services/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension) and [Gradle](first-party/jib-ownership-extension-gradle/src/main/resources/META-INF/services/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension) examples.
+2. Add a text file `src/main/resources/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension` (Maven) / `src/main/resources/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension` (Gradle) and list your classes that implements the Jib Maven/Gradle Plugin Extension API below. See the [Maven](first-party/jib-ownership-extension-maven/src/main/resources/META-INF/services/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension) and [Gradle](first-party/jib-ownership-extension-gradle/src/main/resources/META-INF/services/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension) examples.
 3. Implement [`JibMavenPluginExtension`](https://github.com/GoogleContainerTools/jib/blob/master/jib-maven-plugin-extension-api/src/main/java/com/google/cloud/tools/jib/maven/extension/JibMavenPluginExtension.java) (Maven) / [`JibGradlePluginExtension`](https://github.com/GoogleContainerTools/jib/blob/master/jib-gradle-plugin-extension-api/src/main/java/com/google/cloud/tools/jib/gradle/extension/JibGradlePluginExtension.java) (Gradle).
 
 ### Updating Container Build Plan
