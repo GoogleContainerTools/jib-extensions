@@ -8,9 +8,22 @@ The Jib Extension Framework enables anyone to easily extend and tailor the Jib p
 - [1st-party extensions](first-party): extensions developed and maintained by the Jib team
 - [3rd-party extensions](third-party): links to externally developed extensions
 
+
+## Table of Contents
+
+- [Using Jib Plugin Extensions](#using-jib-plugin-extensions)
+   - [Maven](#using-jib-plugin-extensions-maven)
+   - [Gradle](#using-jib-plugin-extensions-gradle)
+- [Writing Your Own Extensions](#writing-your-own-extensions)
+   - [Project Setup](#project-setup)
+   - [Updating Container Build Plan](#updating-container-build-plan)
+   - [Defining Extension-Specific Configuration](#defining-extension-specific-configuration)
+   - [Version Matrix](#version-matrix)
+
+
 ## Using Jib Plugin Extensions
 
-### Maven
+### Maven<a name="using-jib-plugin-extensions-maven"></a>
 
 1. Add extensions as dependencies to the Jib `<plugin>` block in `pom.xml`
 2. Specify extension implementation classes with `<pluginExtensions>` in Jib's `<configuration>`.
@@ -81,7 +94,7 @@ Some extensions may expect you to provide extension-specific user configuration.
          </pluginExtension>
    ```
 
-### Gradle
+### Gradle<a name="using-jib-plugin-extensions-gradle"></a>
 
 1. Have extensions available to the build script (`build.gradle`) by adding them with `buildscript.dependencies` at the beginning of the build script.
 2. Configure extension implementation classes with `jib.pluginExtensions`.
@@ -150,7 +163,7 @@ It is easy to write an extension! If you have written a useful extension, let us
 ### Project Setup
 
 1. Create a new Java project and add Jib Maven/Gradle Plugin Extension API to the project dependencies.
-   - Maven: ['jib-maven-plugin-extension-api`](https://search.maven.org/artifact/com.google.cloud.tools/jib-maven-plugin-extension-api) with `<scope>provided`.
+   - Maven: [`jib-maven-plugin-extension-api`](https://search.maven.org/artifact/com.google.cloud.tools/jib-maven-plugin-extension-api) with `<scope>provided`.
    ```xml
    <dependencies>
       <dependency>
