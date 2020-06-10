@@ -174,7 +174,7 @@ It is easy to write an extension! If you have written a useful extension, let us
       </dependency>
    </dependencies>
    ```
-   - Gradle: ['jib-gradle-plugin-extension-api'](https://search.maven.org/artifact/com.google.cloud.tools/jib-gradle-plugin-extension-api) with `compileOnly`.
+   - Gradle: [`jib-gradle-plugin-extension-api`](https://search.maven.org/artifact/com.google.cloud.tools/jib-gradle-plugin-extension-api) using `compileOnly`.
    ```gradle
    dependencies {
      compileOnly 'com.google.cloud.tools:jib-gradle-plugin-extension-api:0.3.0'
