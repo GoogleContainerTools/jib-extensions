@@ -24,8 +24,7 @@ The Jib Extension Framework enables anyone to easily extend and tailor the Jib p
 
 ## What Part of Jib Does the Extension Framework Allow to Tweak?
 
-The Container Build Plan originally prepared by Jib plugins. The build plan describes in a declarative way how it plans to build a container image. If you are interested in writing an extension, see [_Updating Container Build Plan_](#updating-container-build-plan) for more details.
-
+The [Container Build Plan](https://github.com/GoogleContainerTools/jib/blob/master/proposals/container-build-plan-spec.md) originally prepared by Jib plugins. The build plan describes in a declarative way how it plans to build a container image. If you are interested in writing an extension, see [_Updating Container Build Plan_](#updating-container-build-plan) for more details.
 
 ## Using Jib Plugin Extensions
 
