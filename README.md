@@ -133,7 +133,7 @@ Running extension: com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLa
 
 Some extensions may expect you to provide extension-specific user configuration.
 
-- For extensions that accept simple string properties (map), use `<pluginExtension><properties>`. For example,
+- For extensions that accept simple string properties (map), use `pluginExtension.properties`. For example,
    ```gradle
      pluginExtensions {
        pluginExtension {
@@ -142,7 +142,7 @@ Some extensions may expect you to provide extension-specific user configuration.
        }
      }
    ```
-- For extensions that define a complex configuration, use `pluginExtension.configuration` (not `jib.configuration`). For example,
+- For extensions that define a complex configuration, use `pluginExtension.configuration`. For example,
    ```gradle
        pluginExtension {
          implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
@@ -179,8 +179,13 @@ It is easy to write an extension! If you have written a useful extension, let us
       </dependency>
    </dependencies>
    ```
-   - Gradle: [`jib-gradle-plugin-extension-api`](https://search.maven.org/artifact/com.google.cloud.tools/jib-gradle-plugin-extension-api) using `compileOnly`.
+   - Gradle: [`jib-gradle-plugin-extension-api`](https://search.maven.org/artifact/com.google.cloud.tools/jib-gradle-plugin-extension-api) using `compileOnly`. Also apply `java-gradle-plugin` (as the Extension API allows you to access the Gradle project being containerized via Gradle API); if your extension does access the Gradle project via Gradle API, ideally you should use a Gradle version that is compatible with what the Jib plugin uses at image building time. (See [_Version Matrix_](#version-matrix).)
    ```gradle
+   plugins {
+     id 'java-gradle-plugin'
+     ...
+   }
+
    dependencies {
      compileOnly 'com.google.cloud.tools:jib-gradle-plugin-extension-api:0.3.0'
    }
@@ -209,6 +214,6 @@ Sometimes, you may want to make your extension configurable by the extension end
 |:----------------:|:------------------------------:|
 | 2.3.0 - current  | 0.3.0                          |
 
-| jib-gradle-plugin | jib-gradle-plugin-extension-api |
-|:-----------------:|:-------------------------------:|
-| 2.4.0 - current   | 0.3.0                           |
+| jib-gradle-plugin | jib-gradle-plugin-extension-api | Jib Plugin Runtime Gradle API |
+|:-----------------:|:-------------------------------:|:-----------------------------:|
+| 2.4.0 - current   | 0.3.0                           | 5.2.1                         |
