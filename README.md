@@ -11,6 +11,7 @@ The Jib Extension Framework enables anyone to easily extend and tailor the Jib p
 
 ## Table of Contents
 
+- [What Part of Jib Does the Extension Framework Allow to Tweak?](#what-part-of-jib-does-the-extension-framework-allow-to-tweak)
 - [Using Jib Plugin Extensions](#using-jib-plugin-extensions)
    - [Maven](#using-jib-plugin-extensions-maven)
    - [Gradle](#using-jib-plugin-extensions-gradle)
@@ -20,6 +21,10 @@ The Jib Extension Framework enables anyone to easily extend and tailor the Jib p
    - [Defining Extension-Specific Configuration](#defining-extension-specific-configuration)
    - [Version Matrix](#version-matrix)
 
+
+## What Part of Jib Does the Extension Framework Allow to Tweak?
+
+The [Container Build Plan](https://github.com/GoogleContainerTools/jib/blob/master/proposals/container-build-plan-spec.md) originally prepared by Jib plugins. The build plan describes in a declarative way how it plans to build a container image. If you are interested in writing an extension, see [_Updating Container Build Plan_](#updating-container-build-plan) for more details.
 
 ## Using Jib Plugin Extensions
 
@@ -65,7 +70,7 @@ When properly configured and loaded, Jib outputs loaded extension in the log. Wh
 
 Some extensions may expect you to provide extension-specific user configuration.
 
-- For extensions that accept simple simple properties (map), use `<pluginExtension><properties>`. For example,
+- For extensions that accept simple string properties (map), use `<pluginExtension><properties>`. For example,
    ```xml
            <pluginExtension>
              <implementation>com.example.ExtensionAcceptingMapConfig</implementation>
@@ -128,7 +133,7 @@ Running extension: com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLa
 
 Some extensions may expect you to provide extension-specific user configuration.
 
-- For extensions that accept simple string properties (map), use `<pluginExtension><properties>`. For example,
+- For extensions that accept simple string properties (map), use `pluginExtension.properties`. For example,
    ```gradle
      pluginExtensions {
        pluginExtension {
@@ -137,7 +142,7 @@ Some extensions may expect you to provide extension-specific user configuration.
        }
      }
    ```
-- For extensions that define a complex configuration, use `pluginExtension.configuration` (not `jib.configuration`). For example,
+- For extensions that define a complex configuration, use `pluginExtension.configuration`. For example,
    ```gradle
        pluginExtension {
          implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
@@ -174,8 +179,13 @@ It is easy to write an extension! If you have written a useful extension, let us
       </dependency>
    </dependencies>
    ```
-   - Gradle: [`jib-gradle-plugin-extension-api`](https://search.maven.org/artifact/com.google.cloud.tools/jib-gradle-plugin-extension-api) using `compileOnly`.
+   - Gradle: [`jib-gradle-plugin-extension-api`](https://search.maven.org/artifact/com.google.cloud.tools/jib-gradle-plugin-extension-api) using `compileOnly`. Also apply `java-gradle-plugin` (as the Extension API allows you to access the Gradle project being containerized via Gradle API); if your extension does access the Gradle project via Gradle API, ideally you should use a Gradle version that is compatible with what the Jib plugin uses at image building time. (See [_Version Matrix_](#version-matrix).)
    ```gradle
+   plugins {
+     id 'java-gradle-plugin'
+     ...
+   }
+
    dependencies {
      compileOnly 'com.google.cloud.tools:jib-gradle-plugin-extension-api:0.3.0'
    }
@@ -204,6 +214,8 @@ Sometimes, you may want to make your extension configurable by the extension end
 |:----------------:|:------------------------------:|
 | 2.3.0 - current  | 0.3.0                          |
 
-| jib-gradle-plugin | jib-gradle-plugin-extension-api |
-|:-----------------:|:-------------------------------:|
-| 2.4.0 - current   | 0.3.0                           |
+| jib-gradle-plugin | jib-gradle-plugin-extension-api | Jib Plugin Runtime Gradle API\* |
+|:-----------------:|:-------------------------------:|:-------------------------------:|
+| 2.4.0 - current   | 0.3.0                           | 5.2.1                           |
+
+*\* For example, the miminum Gradle version that Jib 2.4.0 requires is 5.2.1. Let's say your extension is developed against Gradle API 4.9 and calls a method that is incompatible with Gradle 5.2.1. Further assume that the end-user runs Jib 2.4.0 with your extension on Gradle >= 5.2.1. In this case, Jib may crash when executing your extension. Similarly, if your extension is developed against, say, Gradle API 6.5 and calls an incompatible method, Jib 2.4.0 may crash at runtime.*

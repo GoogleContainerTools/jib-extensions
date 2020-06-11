@@ -37,12 +37,12 @@ A general-purpose layer-filter extension that enables fine-grained layer control
             <!-- Also retain and move in-house-*.jar into the new "in-house dependencies" layer. -->
             <filter>
               <glob>/app/libs/in-house-*.jar</glob>
-              <toLayer>in-house libraries</toLayer>
+              <toLayer>in-house dependencies</toLayer>
             </filter>
             <!-- These go into the same "in-house dependencies" layer. -->
             <filter>
               <glob>/app/libs/other-in-house-*.jar</glob>
-              <toLayer>in-house libraries</toLayer>
+              <toLayer>in-house dependencies</toLayer>
             </filter>
             <filter>
               <glob>/nothing/matches/this/filter</glob>
