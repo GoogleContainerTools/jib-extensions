@@ -5,53 +5,55 @@ A general-purpose layer-filter extension that enables fine-grained layer control
 ## Examples
 
 ```xml
-  <plugin>
-    <groupId>com.google.cloud.tools</groupId>
-    <artifactId>jib-maven-plugin</artifactId>
-    <version>2.3.0</version>
+<plugin>
+  <groupId>com.google.cloud.tools</groupId>
+  <artifactId>jib-maven-plugin</artifactId>
+  <version>2.3.0</version>
 
-    <dependencies>
-      <dependency>
-        <groupId>com.google.cloud.tools</groupId>
-        <artifactId>jib-layer-filter-extension-maven</artifactId>
-        <version>0.1.0</version>
-      </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.cloud.tools</groupId>
+      <artifactId>jib-layer-filter-extension-maven</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+  </dependencies>
 
-    <configuration>
-      ...
-	  <pluginExtension>
-		<implementation>com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension</implementation>
-		<configuration implementation="com.google.cloud.tools.jib.maven.extension.layerfilter.Configuration">
-		  <filters>
-			<!-- Delete all jar files. -->
-			<filter>
-			  <glob>**/*.jar</glob>
-			</filter>
-			// However, retain and move google-*.jar into the new "google libraries" layer.
-			<filter>
-			  <glob>**/google-*.jar</glob>
-			  <toLayer>google libraries</toLayer>
-			</filter>
-			// Also retain and move in-house-*.jar into the new "in-house dependencies" layer.
-			<filter>
-			  <glob>/app/libs/in-house-*.jar</glob>
-			  <toLayer>in-house libraries</toLayer>
-			</filter>
-			// These go into the same "in-house dependencies" layer.
-			<filter>
-			  <glob>/app/libs/other-in-house-*.jar</glob>
-			  <toLayer>in-house libraries</toLayer>
-			</filter>
-			<filter>
-			  <glob>/nothing/matches/this/filter</glob>
-			  <toLayer>this layer will not be created</toLayer>
-			</filter>
-		  </filters>
-		</configuration>
-	  </pluginExtension>
-    </configuration>
-  </plugin>
+  <configuration>
+    ...
+    <pluginExtensions>
+      <pluginExtension>
+        <implementation>com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension</implementation>
+        <configuration implementation="com.google.cloud.tools.jib.maven.extension.layerfilter.Configuration">
+          <filters>
+            <!-- Delete all jar files. -->
+            <filter>
+              <glob>**/*.jar</glob>
+            </filter>
+            // However, retain and move google-*.jar into the new "google libraries" layer.
+            <filter>
+              <glob>**/google-*.jar</glob>
+              <toLayer>google libraries</toLayer>
+            </filter>
+            // Also retain and move in-house-*.jar into the new "in-house dependencies" layer.
+            <filter>
+              <glob>/app/libs/in-house-*.jar</glob>
+              <toLayer>in-house libraries</toLayer>
+            </filter>
+            // These go into the same "in-house dependencies" layer.
+            <filter>
+              <glob>/app/libs/other-in-house-*.jar</glob>
+              <toLayer>in-house libraries</toLayer>
+            </filter>
+            <filter>
+              <glob>/nothing/matches/this/filter</glob>
+              <toLayer>this layer will not be created</toLayer>
+            </filter>
+          </filters>
+        </configuration>
+      </pluginExtension>
+    </pluginExtensions>
+  </configuration>
+</plugin>
 ```
 
 ## Detailed Filtering Rules

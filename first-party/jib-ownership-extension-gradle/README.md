@@ -7,17 +7,31 @@ This extension enables changing ownership (not to be confused with file and dire
 ## Examples
 
 ```gradle
-pluginExtension {
-  implementation = 'com.google.cloud.tools.jib.gradle.extension.ownership.JibOwnershipExtension'
-  configuration {
-    rules {
-      rule {
-        glob = '/app/classes/**'
-        ownership = '300'
-      }
-      rule {
-        glob = '/static/**'
-        ownership = '300:500'
+// should be at the top of build.gradle
+buildscript {
+  dependencies {
+    classpath('com.google.cloud.tools:jib-ownership-extension-gradle:0.1.0')
+  }
+}
+
+...
+
+jib {
+  ...
+  pluginExtensions {
+    pluginExtension {
+      implementation = 'com.google.cloud.tools.jib.gradle.extension.ownership.JibOwnershipExtension'
+      configuration {
+        rules {
+          rule {
+            glob = '/app/classes/**'
+            ownership = '300'
+          }
+          rule {
+            glob = '/static/**'
+            ownership = '300:500'
+          }
+        }
       }
     }
   }

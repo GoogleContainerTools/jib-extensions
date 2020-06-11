@@ -14,32 +14,37 @@ buildscript {
 
 ...
 
-pluginExtension {
-  implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
-  configuration {
-    filters {
-      // Delete all jar files.
-      filter {
-        glob = '**/*.jar'
-      }
-      // However, retain and move google-*.jar into the new "google libraries" layer.
-      filter {
-        glob = '**/google-*.jar'
-        toLayer = 'google libraries'
-      }
-      // Also retain and move in-house-*.jar into the new "in-house dependencies" layer.
-      filter {
-        glob = '/app/libs/in-house-*.jar'
-        toLayer = 'in-house dependencies'
-      }
-      // These go into the same "in-house dependencies" layer.
-      filter {
-        glob = '/app/libs/other-in-house-*.jar'
-        toLayer = 'in-house dependencies'
-      }
-      filter {
-        glob = '/nothing/matches/this/filter'
-        toLayer = 'this layer will not be created'
+jib {
+  ...
+  pluginExtensions {
+    pluginExtension {
+      implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
+      configuration {
+        filters {
+          // Delete all jar files.
+          filter {
+            glob = '**/*.jar'
+          }
+          // However, retain and move google-*.jar into the new "google libraries" layer.
+          filter {
+            glob = '**/google-*.jar'
+            toLayer = 'google libraries'
+          }
+          // Also retain and move in-house-*.jar into the new "in-house dependencies" layer.
+          filter {
+            glob = '/app/libs/in-house-*.jar'
+            toLayer = 'in-house dependencies'
+          }
+          // These go into the same "in-house dependencies" layer.
+          filter {
+            glob = '/app/libs/other-in-house-*.jar'
+            toLayer = 'in-house dependencies'
+          }
+          filter {
+            glob = '/nothing/matches/this/filter'
+            toLayer = 'this layer will not be created'
+          }
+        }
       }
     }
   }
