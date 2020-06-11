@@ -4,7 +4,16 @@ A general-purpose layer-filter extension that enables fine-grained layer control
 
 ## Examples
 
-```grdle
+```gradle
+// should be at the top of build.gradle
+buildscript {
+  dependencies {
+    classpath('com.google.cloud.tools:jib-layer-filter-extension-gradle:0.1.0')
+  }
+}
+
+...
+
 pluginExtension {
   implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
   configuration {
