@@ -25,21 +25,21 @@ A general-purpose layer-filter extension that enables fine-grained layer control
         <implementation>com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension</implementation>
         <configuration implementation="com.google.cloud.tools.jib.maven.extension.layerfilter.Configuration">
           <filters>
-            <!-- Delete all jar files. -->
+            <!-- Delete all jar files (unless they match the filters below). -->
             <filter>
               <glob>**/*.jar</glob>
             </filter>
-            // However, retain and move google-*.jar into the new "google libraries" layer.
+            <!-- However, retain and move google-*.jar into the new "google libraries" layer. -->
             <filter>
               <glob>**/google-*.jar</glob>
               <toLayer>google libraries</toLayer>
             </filter>
-            // Also retain and move in-house-*.jar into the new "in-house dependencies" layer.
+            <!-- Also retain and move in-house-*.jar into the new "in-house dependencies" layer. -->
             <filter>
               <glob>/app/libs/in-house-*.jar</glob>
               <toLayer>in-house libraries</toLayer>
             </filter>
-            // These go into the same "in-house dependencies" layer.
+            <!-- These go into the same "in-house dependencies" layer. -->
             <filter>
               <glob>/app/libs/other-in-house-*.jar</glob>
               <toLayer>in-house libraries</toLayer>

@@ -21,7 +21,7 @@ jib {
       implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
       configuration {
         filters {
-          // Delete all jar files.
+          // Delete all jar files (unless they match the filters below). -->
           filter {
             glob = '**/*.jar'
           }
