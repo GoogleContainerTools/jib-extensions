@@ -11,6 +11,7 @@ The Jib Extension Framework enables anyone to easily extend and tailor the Jib p
 
 ## Table of Contents
 
+- [What Part of Jib Does the Extension Framework Allow to Tweak?](#what-part-of-jib-does-the-extension-framework-allow-to-tweak)
 - [Using Jib Plugin Extensions](#using-jib-plugin-extensions)
    - [Maven](#using-jib-plugin-extensions-maven)
    - [Gradle](#using-jib-plugin-extensions-gradle)
@@ -19,6 +20,11 @@ The Jib Extension Framework enables anyone to easily extend and tailor the Jib p
    - [Updating Container Build Plan](#updating-container-build-plan)
    - [Defining Extension-Specific Configuration](#defining-extension-specific-configuration)
    - [Version Matrix](#version-matrix)
+
+
+## What Part of Jib Does the Extension Framework Allow to Tweak?
+
+The Container Build Plan originally prepared by Jib plugins. The build plan describes in a declarative way how it plans to build a container image. If you are interested in writing an extension, see [_Updating Container Build Plan_](#updating-container-build-plan) for more details.
 
 
 ## Using Jib Plugin Extensions
@@ -65,7 +71,7 @@ When properly configured and loaded, Jib outputs loaded extension in the log. Wh
 
 Some extensions may expect you to provide extension-specific user configuration.
 
-- For extensions that accept simple simple properties (map), use `<pluginExtension><properties>`. For example,
+- For extensions that accept simple string properties (map), use `<pluginExtension><properties>`. For example,
    ```xml
            <pluginExtension>
              <implementation>com.example.ExtensionAcceptingMapConfig</implementation>
