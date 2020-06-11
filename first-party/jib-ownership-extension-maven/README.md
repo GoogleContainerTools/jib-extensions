@@ -7,23 +7,40 @@ This extension enables changing ownership (not to be confused with file and dire
 ## Examples
 
 ```xml
-<configuration>
-  <pluginExtensions>
-    <pluginExtension>
-      <implementation>com.google.cloud.tools.jib.maven.extension.ownership.JibOwnershipExtension</implementation>
-      <configuration implementation="com.google.cloud.tools.jib.maven.extension.ownership.Configuration">
-        <rules>
-          <rule>
-            <glob>/app/classes/**</glob>
-            <ownership>300</ownership>
-          </rule>
-          <rule>
-            <glob>/static/**</glob>
-            <ownership>300:500</ownership>
-          </rule>
-        </rules>
-      </configuration>
-    </pluginExtension>
+<plugin>
+  <groupId>com.google.cloud.tools</groupId>
+  <artifactId>jib-maven-plugin</artifactId>
+  <version>2.3.0</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.google.cloud.tools</groupId>
+      <artifactId>jib-ownership-extension-maven</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+  </dependencies>
+
+  <configuration>
+    ...
+    <pluginExtensions>
+      <pluginExtension>
+        <implementation>com.google.cloud.tools.jib.maven.extension.ownership.JibOwnershipExtension</implementation>
+        <configuration implementation="com.google.cloud.tools.jib.maven.extension.ownership.Configuration">
+          <rules>
+            <rule>
+              <glob>/app/classes/**</glob>
+              <ownership>300</ownership>
+            </rule>
+            <rule>
+              <glob>/static/**</glob>
+              <ownership>300:500</ownership>
+            </rule>
+          </rules>
+        </configuration>
+      </pluginExtension>
+    </pluginExtensions>
+  </configuration>
+</plugin>
 ```
 
 ## Known Issues
