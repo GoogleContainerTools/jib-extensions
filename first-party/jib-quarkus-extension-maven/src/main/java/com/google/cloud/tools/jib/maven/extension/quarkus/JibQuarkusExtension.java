@@ -94,6 +94,13 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
       FileEntriesLayer jarLayer = FileEntriesLayer.builder().addEntry(jar, appRootJar).build();
       planBuilder.addLayer(jarLayer);
 
+      // Preserve extra directories layers.
+      buildPlan
+          .getLayers()
+          .stream()
+          .filter(layer -> layer.getName().startsWith("extra files"))
+          .forEach(planBuilder::addLayer);
+
       // set entrypoint
       List<String> entrypoint = new ArrayList<>();
       entrypoint.add("java");
