@@ -218,4 +218,4 @@ Sometimes, you may want to make your extension configurable by the extension end
 |:-----------------:|:-------------------------------:|:-------------------------------:|
 | 2.4.0 - current   | 0.3.0                           | 5.2.1                           |
 
-*\* For example, it is recommended to use Gradle 5.2.1 or only use API available in 5.2.1 to develop an extension for Jib Gradle 2.4.0.*
+*\* For example, it is recommended to use Gradle 5.2.1 or only use the API available in 5.2.1 to develop an extension for Jib Gradle 2.4.0.*
