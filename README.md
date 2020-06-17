@@ -218,4 +218,4 @@ Sometimes, you may want to make your extension configurable by the extension end
 |:-----------------:|:-------------------------------:|:-------------------------------:|
 | 2.4.0 - current   | 0.3.0                           | 5.2.1                           |
 
-*\* For example, the miminum Gradle version that Jib 2.4.0 requires is 5.2.1. Let's say your extension is developed against Gradle API 4.9 and calls a method that is incompatible with Gradle 5.2.1. Further assume that the end-user runs Jib 2.4.0 with your extension on Gradle >= 5.2.1. In this case, Jib may crash when executing your extension. Similarly, if your extension is developed against, say, Gradle API 6.5 and calls an incompatible method, Jib 2.4.0 may crash at runtime.*
+*\* For example, it is recommended to use Gradle 5.2.1 or only use the API available in 5.2.1 to develop an extension for Jib Gradle 2.4.0.*
