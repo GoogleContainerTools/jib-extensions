@@ -137,7 +137,9 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
                 .stream()
                 // endsWith: Quarkus prepends group ID to the augmented JARs in target/lib.
                 .anyMatch(jarFilename -> path.getFileName().toString().endsWith(jarFilename));
-    Predicate<Path> isSnapshot = path -> path.getFileName().toString().contains("SNAPSHOT");
+    Predicate<Path> isSnapshot =
+        path ->
+            path.getFileName().toString().contains("SNAPSHOT") && !isProjectDependency.test(path);
     Predicate<Path> isThirdParty = isProjectDependency.negate().and(isSnapshot.negate());
 
     addDependencyLayer(planBuilder, libDirectory, "dependencies", isThirdParty);
