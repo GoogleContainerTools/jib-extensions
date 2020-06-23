@@ -91,7 +91,8 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
 
       // Quarkus runner JAR layer
       AbsoluteUnixPath appRootJar = appRoot.resolve("app.jar");
-      FileEntriesLayer jarLayer = FileEntriesLayer.builder().addEntry(jar, appRootJar).build();
+      FileEntriesLayer jarLayer =
+          FileEntriesLayer.builder().setName("quarkus jar").addEntry(jar, appRootJar).build();
       planBuilder.addLayer(jarLayer);
 
       // Preserve extra directories layers.
@@ -171,8 +172,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
   }
 
   // TODO: also check system and Maven properties (e.g., -Djib.container.appRoot).
-  @VisibleForTesting
-  void readJibConfigurations(MavenProject project) {
+  private void readJibConfigurations(MavenProject project) {
     Plugin jibPlugin = project.getPlugin("com.google.cloud.tools:jib-maven-plugin");
     if (jibPlugin != null) {
       Xpp3Dom configurationDom = (Xpp3Dom) jibPlugin.getConfiguration();

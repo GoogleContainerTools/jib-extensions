@@ -23,7 +23,7 @@ class MockComponentArtifactIdentifier implements ComponentArtifactIdentifier {
 
   private final ComponentIdentifier componentIdentifier;
 
-  public MockComponentArtifactIdentifier(ComponentIdentifier componentIdentifier) {
+  MockComponentArtifactIdentifier(ComponentIdentifier componentIdentifier) {
     this.componentIdentifier = componentIdentifier;
   }
 
