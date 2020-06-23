@@ -67,12 +67,6 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
       logger.log(LogLevel.LIFECYCLE, "Running Quarkus Jib extension");
       readJibConfigurations(gradleData.getProject());
 
-      // DEBUG CODE. REMOVE
-      logger.log(LogLevel.WARN, appRoot.toString());
-      for (String val : jvmFlags) {
-        logger.log(LogLevel.WARN, val);
-      }
-
       Project project = gradleData.getProject();
       Path buildDir = project.getBuildDir().toPath();
       Jar jarTask = (Jar) project.getTasks().findByName("jar");
@@ -93,7 +87,8 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
 
       // Quarkus runner JAR layer
       AbsoluteUnixPath appRootJar = appRoot.resolve("app.jar");
-      FileEntriesLayer jarLayer = FileEntriesLayer.builder().addEntry(jar, appRootJar).build();
+      FileEntriesLayer jarLayer =
+          FileEntriesLayer.builder().setName("quarkus jar").addEntry(jar, appRootJar).build();
       planBuilder.addLayer(jarLayer);
 
       // Preserve extra directories layers.
@@ -165,7 +160,7 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
           .forEach(
               path -> {
                 layerBuilder.addEntry(
-                    path, appRoot.resolve("lib").resolve(path.getFileName().toString()));
+                    path, appRoot.resolve("libs").resolve(path.getFileName().toString()));
               });
     }
 
