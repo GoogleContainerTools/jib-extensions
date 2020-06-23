@@ -99,7 +99,7 @@ public class JibQuarkusExtensionTest {
   public void setUp() throws IOException {
     Path buildDir = tempFolder.newFolder("build").toPath();
     Path quarkusLibDir = Files.createDirectory(buildDir.resolve("lib"));
-    Files.createFile(buildDir.resolve("app-runner.jar"));
+    Files.createFile(buildDir.resolve("my-app-runner.jar"));
     Files.createFile(quarkusLibDir.resolve("com.example.sub-module-artifact.jar"));
     Files.createFile(quarkusLibDir.resolve("com.example.third-party-artifact.jar"));
     Files.createFile(quarkusLibDir.resolve("com.example.third-party-SNAPSHOT-artifact.jar"));
@@ -109,7 +109,7 @@ public class JibQuarkusExtensionTest {
     when(project.getExtensions()).thenReturn(extensionContainer);
 
     when(taskContainer.findByName("jar")).thenReturn(jarTask);
-    when(jarTask.getArchiveFile().get().getAsFile().getName()).thenReturn("app.jar");
+    when(jarTask.getArchiveFile().get().getAsFile().getName()).thenReturn("my-app.jar");
 
     when(extensionContainer.findByType(JibExtension.class)).thenReturn(jibPlugin);
     when(jibPlugin.getContainer().getAppRoot()).thenReturn("/new/appRoot");
@@ -144,7 +144,7 @@ public class JibQuarkusExtensionTest {
 
   @Test
   public void testExtendContainerBuildPlan_noQuarkusRunnerJar() throws IOException {
-    Files.delete(tempFolder.getRoot().toPath().resolve("build").resolve("app-runner.jar"));
+    Files.delete(tempFolder.getRoot().toPath().resolve("build").resolve("my-app-runner.jar"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
 
     try {
@@ -156,7 +156,7 @@ public class JibQuarkusExtensionTest {
       assertThat(
           ex.getMessage(),
           endsWith(
-              "/app-runner.jar doesn't exist; did you run the Qaurkus Gradle plugin "
+              "/my-app-runner.jar doesn't exist; did you run the Qaurkus Gradle plugin "
                   + "('quarkusBuild' task)?"));
     }
   }

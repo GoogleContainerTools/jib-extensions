@@ -95,7 +95,7 @@ public class JibQuarkusExtensionTest {
   public void setUp() throws IOException {
     Path outputDir = tempFolder.newFolder("target").toPath();
     Path quarkusLibDir = Files.createDirectory(outputDir.resolve("lib"));
-    Files.createFile(outputDir.resolve("app-runner.jar"));
+    Files.createFile(outputDir.resolve("my-app-runner.jar"));
     Files.createFile(quarkusLibDir.resolve("com.example.sub-module-artifact.jar"));
     Files.createFile(quarkusLibDir.resolve("com.example.third-party-artifact.jar"));
     Files.createFile(quarkusLibDir.resolve("com.example.third-party-SNAPSHOT-artifact.jar"));
@@ -112,7 +112,7 @@ public class JibQuarkusExtensionTest {
     when(jibModuleArtifact.getFile()).thenReturn(new File("jib-module-artifact.jar"));
 
     when(jibModule.getBuild()).thenReturn(mavenBuild);
-    when(mavenBuild.getFinalName()).thenReturn("app");
+    when(mavenBuild.getFinalName()).thenReturn("my-app");
     when(mavenBuild.getDirectory()).thenReturn(outputDir.toString());
 
     Xpp3Dom jibConfigurationDom = new Xpp3Dom("configuration");
@@ -150,7 +150,7 @@ public class JibQuarkusExtensionTest {
 
   @Test
   public void testExtendContainerBuildPlan_noQuarkusRunnerJar() throws IOException {
-    Files.delete(tempFolder.getRoot().toPath().resolve("target").resolve("app-runner.jar"));
+    Files.delete(tempFolder.getRoot().toPath().resolve("target").resolve("my-app-runner.jar"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
 
     try {
@@ -162,7 +162,7 @@ public class JibQuarkusExtensionTest {
       assertThat(
           ex.getMessage(),
           endsWith(
-              "/app-runner.jar doesn't exist; did you run the Qaurkus Maven plugin "
+              "/my-app-runner.jar doesn't exist; did you run the Qaurkus Maven plugin "
                   + "('compile' and 'quarkus:build' Maven goals)?"));
     }
   }
