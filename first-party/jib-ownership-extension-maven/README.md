@@ -10,7 +10,7 @@ This extension enables changing ownership (not to be confused with file and dire
 <plugin>
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>jib-maven-plugin</artifactId>
-  <version>2.3.0</version>
+  <version>2.4.0</version>
 
   <dependencies>
     <dependency>

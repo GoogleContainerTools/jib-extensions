@@ -8,7 +8,7 @@ A general-purpose layer-filter extension that enables fine-grained layer control
 <plugin>
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>jib-maven-plugin</artifactId>
-  <version>2.3.0</version>
+  <version>2.4.0</version>
 
   <dependencies>
     <dependency>
