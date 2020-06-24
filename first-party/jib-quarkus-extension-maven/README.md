@@ -1,0 +1,57 @@
+# Jib Quarkus Extension
+
+Enables containerizing a Quarkus app built with [Quarkus Maven Plugin](https://search.maven.org/artifact/io.quarkus/quarkus-maven-plugin).
+
+The Quarkus app framework prepares a special "runner" JAR and aguments dependency JARs, where the standard Jib containerization does not fit. This extension takes the JARs prepared by Quakus (runner JAR and augmented dependency JARs) and sets the entrypoint to run the runner JAR.
+
+## Examples
+
+Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions) for applying a Jib plugin extension.
+
+```xml
+<plugin>
+  <groupId>com.google.cloud.tools</groupId>
+  <artifactId>jib-maven-plugin</artifactId>
+  <version>2.4.0</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.google.cloud.tools</groupId>
+      <artifactId>jib-quarkus-extension-maven</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+  </dependencies>
+
+  <configuration>
+    <container>
+      <!-- to suppress Jib warning about missing main class -->
+      <mainClass>bogus</mainClass>
+      ...
+      <jvmFlags>
+        <flag>-verbose:gc</flag>
+        <flag>-Dsome.property=value</flag>
+      </jvmFlags>
+    </container>
+    ...
+    <pluginExtensions>
+      <pluginExtension>
+        <implementation>com.google.cloud.tools.jib.maven.extension.quarkus.JibQuarkusExtension</implementation>
+      </pluginExtension>
+    </pluginExtensions>
+  </configuration>
+</plugin>
+```
+
+## Standard Jib Configurations Being Ignored
+
+By the way Quarkus needs to run (via `java -jar quarkus-runner.jar`), some standard Jib configruations will have no effect:
+
+- `<container><mainClass>`
+- `<container><entrypoint>` (Note `<container><args>` continues to work.)
+- `<container><extraClasspath>`
+- `<containerizingMode>`
+
+Additionally, the following configurations overriden by Maven and Java system properties (for example, passing `-Djib.container.appRoot=...` on the command-line) is not yet supported.
+
+- `<container><appRoot>`
+- `<container><jvmFlags>`
