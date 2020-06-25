@@ -39,7 +39,7 @@ The following example adds and runs the [Jib Layer-Filter Extension](first-party
   <plugin>
     <groupId>com.google.cloud.tools</groupId>
     <artifactId>jib-maven-plugin</artifactId>
-    <version>2.3.0</version>
+    <version>2.4.0</version>
 
     <!-- 1. have extension classes available on Jib's runtime classpath -->
     <dependencies>
@@ -64,7 +64,7 @@ The following example adds and runs the [Jib Layer-Filter Extension](first-party
 
 When properly configured and loaded, Jib outputs loaded extension in the log. When you configure multiple `<pluginExtension>`s, Jib runs the extensions in the given order.
 ```
-[INFO] --- jib-maven-plugin:2.3.0:build (default-cli) @ helloworld ---
+[INFO] --- jib-maven-plugin:2.4.0:build (default-cli) @ helloworld ---
 [INFO] Running extension: com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension
 ```
 
