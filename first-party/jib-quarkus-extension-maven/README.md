@@ -1,5 +1,7 @@
 # Jib Quarkus Extension
 
+***Experiment***: may fail to work on complex projects. Does not cover "native" Quarkus packaging type.
+
 Enables containerizing a Quarkus app built with [Quarkus Maven Plugin](https://search.maven.org/artifact/io.quarkus/quarkus-maven-plugin).
 
 The Quarkus app framework prepares a special "runner" JAR and aguments dependency JARs, where the standard Jib containerization does not fit. This extension takes the JARs prepared by Quakus (runner JAR and augmented dependency JARs) and sets the entrypoint to run the runner JAR.
