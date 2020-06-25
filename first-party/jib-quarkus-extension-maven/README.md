@@ -28,9 +28,13 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
       <mainClass>bogus</mainClass>
       ...
       <jvmFlags>
-        <flag>-verbose:gc</flag>
-        <flag>-Dsome.property=value</flag>
+        <flag>-Dquarkus.http.host=0.0.0.0</flag>
+        <flag>-Djava.util.logging.manager=org.jboss.logmanager.LogManager</flag>
       </jvmFlags>
+      <ports>
+        <port>8080</port>
+      </ports>
+      <user>1001</user>
     </container>
     ...
     <pluginExtensions>

@@ -23,7 +23,9 @@ jib {
   container {
     mainClass = 'bogus'  // to suppress Jib warning about missing main class
     ...
-    jvmFlags = ['-verbose:gc', '-Dsome.property=value']
+    jvmFlags = ['-Dquarkus.http.host=0.0.0.0', '-Djava.util.logging.manager=org.jboss.logmanager.LogManager']
+    exposedPorts = [8080]
+    user = '1001'
   }
   pluginExtensions {
     pluginExtension {
