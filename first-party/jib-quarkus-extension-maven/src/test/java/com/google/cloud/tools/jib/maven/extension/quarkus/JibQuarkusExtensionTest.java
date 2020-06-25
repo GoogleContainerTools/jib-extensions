@@ -197,13 +197,13 @@ public class JibQuarkusExtensionTest {
     assertEquals("extra files", layer6.getName());
 
     assertEquals(
-        Arrays.asList("/new/appRoot/libs/com.example.third-party-artifact.jar"),
+        Arrays.asList("/new/appRoot/lib/com.example.third-party-artifact.jar"),
         layerToExtractionPaths(layer1));
     assertEquals(
-        Arrays.asList("/new/appRoot/libs/com.example.third-party-SNAPSHOT-artifact.jar"),
+        Arrays.asList("/new/appRoot/lib/com.example.third-party-SNAPSHOT-artifact.jar"),
         layerToExtractionPaths(layer2));
     assertEquals(
-        Arrays.asList("/new/appRoot/libs/com.example.sub-module-artifact.jar"),
+        Arrays.asList("/new/appRoot/lib/com.example.sub-module-artifact.jar"),
         layerToExtractionPaths(layer3));
     assertEquals(Arrays.asList("/new/appRoot/app.jar"), layerToExtractionPaths(layer4));
     assertEquals(extraLayer1.getEntries(), layer5.getEntries());

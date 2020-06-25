@@ -162,7 +162,7 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
           .forEach(
               path -> {
                 layerBuilder.addEntry(
-                    path, appRoot.resolve("libs").resolve(path.getFileName().toString()));
+                    path, appRoot.resolve("lib").resolve(path.getFileName().toString()));
               });
     }
 
