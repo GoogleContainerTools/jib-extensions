@@ -42,6 +42,7 @@ subprojects {
     GUAVA: '28.1-jre',
     JSR305: '3.0.2', // transitively pulled in by GUAVA
 
+    JIB_CORE: '0.15.0',
     JIB_GRADLE: '2.4.0',
 
     // for Build Plan and Jib Plugins Extension API

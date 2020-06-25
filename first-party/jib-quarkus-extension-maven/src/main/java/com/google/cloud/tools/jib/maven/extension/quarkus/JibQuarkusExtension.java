@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.jib.maven.extension.quarkus;
 
+import com.google.cloud.tools.jib.api.JavaContainerBuilder;
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
@@ -96,10 +97,11 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
       planBuilder.addLayer(jarLayer);
 
       // Preserve extra directories layers.
+      String extraFilesLayerName = JavaContainerBuilder.LayerType.EXTRA_FILES.getName();
       buildPlan
           .getLayers()
           .stream()
-          .filter(layer -> layer.getName().startsWith("extra files"))
+          .filter(layer -> layer.getName().startsWith(extraFilesLayerName))
           .forEach(planBuilder::addLayer);
 
       // set entrypoint
