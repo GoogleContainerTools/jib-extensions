@@ -6,6 +6,8 @@ This extension enables changing ownership (not to be confused with file and dire
 
 ## Examples
 
+Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions) for applying a Jib plugin extension.
+
 ```gradle
 // should be at the top of build.gradle
 buildscript {
