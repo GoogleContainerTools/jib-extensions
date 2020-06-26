@@ -1,6 +1,6 @@
 # Jib Quarkus Extension
 
-***Experiment***: may fail to work on complex projects. Does not cover "native" Quarkus packaging type.
+***Experimental***: may fail to work on complex projects. Does not cover "native" Quarkus packaging type.
 
 Enables containerizing a Quarkus app built with [Quarkus Maven Plugin](https://search.maven.org/artifact/io.quarkus/quarkus-maven-plugin).
 
