@@ -57,7 +57,7 @@ By the way Quarkus needs to run (via `java -jar quarkus-runner.jar`), some stand
 - `<container><extraClasspath>`
 - `<containerizingMode>`
 
-Additionally, the following configurations overriden by Maven and Java system properties (for example, passing `-Djib.container.appRoot=...` on the command-line) is not yet supported.
+Additionally, overriding the following configurations using Maven and Java system properties (for example, passing `-Djib.container.jvmFlags=...` on the command-line) is not yet supported.
 
 - `<container><appRoot>`
 - `<container><jvmFlags>`
