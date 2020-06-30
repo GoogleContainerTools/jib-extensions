@@ -1,0 +1,75 @@
+plugins {
+  id 'java-gradle-plugin'
+  id 'net.researchgate.release'
+  id 'maven-publish'
+  id 'eclipse'
+}
+
+repositories {
+  gradlePluginPortal()
+}
+
+dependencies {
+  compileOnly "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
+  compileOnly "gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:${dependencyVersions.JIB_GRADLE}"
+  compileOnly "com.google.guava:guava:${dependencyVersions.GUAVA}"
+  compileOnly "org.springframework.boot:spring-boot-gradle-plugin:${dependencyVersions.SPRING_BOOT}"
+
+  testImplementation "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
+  testImplementation "gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:${dependencyVersions.JIB_GRADLE}"
+  testImplementation "com.google.guava:guava:${dependencyVersions.GUAVA}"
+  testImplementation "junit:junit:${dependencyVersions.JUNIT}"
+  testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
+  testImplementation "org.springframework.boot:spring-boot-gradle-plugin:${dependencyVersions.SPRING_BOOT}"
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Version': version
+    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.gradle.extension.quarkus'
+
+    // OSGi metadata
+    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.gradle.extension.quarkus'
+    attributes 'Bundle-Name': 'Quarkus Extension for Jib Gradle Plugin'
+    attributes 'Bundle-Vendor': 'Google LLC'
+    attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'
+    attributes 'Bundle-License': 'https://www.apache.org/licenses/LICENSE-2.0'
+    attributes 'Export-Package': 'com.google.cloud.tools.jib.*'
+  }
+}
+
+/* RELEASE */
+configureMavenRelease()
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      pom {
+        name = 'Quarkus Extension for Jib Gradle Plugin'
+        description = 'Allows building images for Quarkus projects.'
+      }
+      from components.java
+    }
+  }
+}
+
+// Release plugin (git release commits and version updates)
+release {
+  tagTemplate = 'v$version-jib-quarkus-extension-gradle'
+  git {
+    requireBranch = /^jib-quarkus-extension-gradle-release-v\d+.*$/  //regex
+  }
+}
+/* RELEASE */
+
+/* ECLIPSE */
+// TODO: remove after upgrading to Gradle 5.6. (https://github.com/eclipse/buildship/issues/689)
+// Also remove the 'eclipse' plugin.
+eclipse.classpath.file.whenMerged {
+  entries.findAll {
+    it.path in ['src/test/java', 'src/test/resources', 'src/integration-test/java', 'src/integration-test/resources']
+  }.each {
+    it.entryAttributes['test'] = 'true'
+  }
+}
+/* ECLIPSE */
