@@ -131,8 +131,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(config), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
 
     FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
     assertEquals(layer.getEntries(), newLayer.getEntries());
@@ -150,8 +149,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(config), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
 
     assertEquals(2, newPlan.getLayers().size());
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
@@ -175,8 +173,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(config), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
 
     assertEquals(0, newPlan.getLayers().size());
   }
@@ -232,8 +229,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(config), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
 
     assertEquals(1, newPlan.getLayers().size());
     FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
@@ -269,8 +265,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(config), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
 
     assertEquals(6, newPlan.getLayers().size());
 

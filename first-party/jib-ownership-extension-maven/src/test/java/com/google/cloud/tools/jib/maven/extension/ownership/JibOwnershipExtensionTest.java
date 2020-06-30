@@ -117,8 +117,7 @@ public class JibOwnershipExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(config), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
@@ -164,8 +163,7 @@ public class JibOwnershipExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(config), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
     assertEquals(Arrays.asList("999:777"), mapLayerEntries(newLayer, FileEntry::getOwnership));
