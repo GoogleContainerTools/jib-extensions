@@ -35,7 +35,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -49,8 +48,6 @@ public class JibLayerFilterExtensionTest {
   @Mock private Configuration config;
   @Mock private MavenData mavenData;
   @Mock private ExtensionLogger logger;
-
-  private Map<String, String> properties;
 
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
@@ -80,7 +77,7 @@ public class JibLayerFilterExtensionTest {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), mavenData, logger);
     assertSame(buildPlan, newPlan);
     verify(logger).log(LogLevel.WARN, "Nothing configured for Jib Layer Filter Extension");
   }
@@ -94,7 +91,7 @@ public class JibLayerFilterExtensionTest {
 
     try {
       new JibLayerFilterExtension()
-          .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
+          .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
@@ -112,7 +109,7 @@ public class JibLayerFilterExtensionTest {
 
     try {
       new JibLayerFilterExtension()
-          .extendContainerBuildPlan(buildPlan, properties, Optional.of(config), mavenData, logger);
+          .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
@@ -134,8 +131,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, properties, Optional.of(config), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
     assertEquals(layer.getEntries(), newLayer.getEntries());
@@ -153,8 +149,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, properties, Optional.of(config), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     assertEquals(2, newPlan.getLayers().size());
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
@@ -178,8 +173,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, properties, Optional.of(config), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     assertEquals(0, newPlan.getLayers().size());
   }
@@ -201,8 +195,7 @@ public class JibLayerFilterExtensionTest {
 
     JibLayerFilterExtension extension = new JibLayerFilterExtension();
     ContainerBuildPlan newPlan =
-        extension.extendContainerBuildPlan(
-            buildPlan, properties, Optional.of(config), mavenData, logger);
+        extension.extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     ArrayList<String> layerNames = new ArrayList<>(extension.newToLayers.keySet());
     assertEquals(Arrays.asList("foo", "same layer name", "bar", "baz"), layerNames);
@@ -235,8 +228,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, properties, Optional.of(config), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     assertEquals(1, newPlan.getLayers().size());
     FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
@@ -272,8 +264,7 @@ public class JibLayerFilterExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibLayerFilterExtension()
-            .extendContainerBuildPlan(
-                buildPlan, properties, Optional.of(config), mavenData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
 
     assertEquals(6, newPlan.getLayers().size());
 
