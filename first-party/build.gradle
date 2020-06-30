@@ -49,7 +49,7 @@ subprojects {
     GRADLE_EXTENSION: '0.3.0',
     MAVEN_EXTENSION: '0.3.0',
 
-	SPRING_BOOT: '2.3.1.RELEASE', // for Spring Boot Gradle extension
+    SPRING_BOOT: '2.3.1.RELEASE', // for Spring Boot Gradle extension
     MAVEN_API: '3.5.2',
 
     //test
