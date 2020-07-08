@@ -26,11 +26,11 @@ dependencies {
 jar {
   manifest {
     attributes 'Implementation-Version': version
-    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.gradle.extension.quarkus'
+    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.gradle.extension.springboot'
 
     // OSGi metadata
-    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.gradle.extension.quarkus'
-    attributes 'Bundle-Name': 'Quarkus Extension for Jib Gradle Plugin'
+    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.gradle.extension.springboot'
+    attributes 'Bundle-Name': 'Spring Boot Extension for Jib Gradle Plugin'
     attributes 'Bundle-Vendor': 'Google LLC'
     attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'
     attributes 'Bundle-License': 'https://www.apache.org/licenses/LICENSE-2.0'
@@ -45,8 +45,8 @@ publishing {
   publications {
     mavenJava(MavenPublication) {
       pom {
-        name = 'Quarkus Extension for Jib Gradle Plugin'
-        description = 'Allows building images for Quarkus projects.'
+        name = 'Spring Boot Extension for Jib Gradle Plugin'
+        description = 'Provides extended support for Spring Boot projects.'
       }
       from components.java
     }
@@ -55,9 +55,9 @@ publishing {
 
 // Release plugin (git release commits and version updates)
 release {
-  tagTemplate = 'v$version-jib-quarkus-extension-gradle'
+  tagTemplate = 'v$version-jib-spring-boot-extension-gradle'
   git {
-    requireBranch = /^jib-quarkus-extension-gradle-release-v\d+.*$/  //regex
+    requireBranch = /^jib-spring-boot-extension-gradle-release-v\d+.*$/  //regex
   }
 }
 /* RELEASE */

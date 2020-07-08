@@ -27,7 +27,6 @@ import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.LayerObject;
-import com.google.cloud.tools.jib.gradle.JibExtension;
 import com.google.cloud.tools.jib.gradle.extension.GradleData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
@@ -43,12 +42,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.internal.file.AbstractFileCollection;
+import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskDependency;
+import org.gradle.api.tasks.TaskProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.gradle.tasks.bundling.BootJar;
@@ -81,14 +82,10 @@ public class JibSpringBootExtensionTest {
 
   @Mock private ExtensionLogger logger;
 
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-  private Project project;
-
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-  private BootJar bootJar;
-
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-  private JibExtension jibPlugin;
+  @Mock private Project project;
+  @Mock private TaskContainer taskContainer;
+  @Mock private TaskProvider<Task> taskProvider;
+  @Mock private BootJar bootJar;
 
   private GradleData gradleData = () -> project;
   private final Map<String, String> properties = new HashMap<>();
@@ -111,8 +108,10 @@ public class JibSpringBootExtensionTest {
 
   @Before
   public void setUp() {
-    when(project.getTasks().named("bootJar").getOrNull()).thenReturn(bootJar);
-    when(project.getTasks().named("bootJar").get()).thenReturn(bootJar);
+    when(project.getTasks()).thenReturn(taskContainer);
+    when(taskContainer.named("bootJar")).thenReturn(taskProvider);
+    when(taskProvider.getOrNull()).thenReturn(bootJar);
+    when(taskProvider.get()).thenReturn(bootJar);
   }
 
   @Test
@@ -165,13 +164,7 @@ public class JibSpringBootExtensionTest {
   @Test
   public void testShouldExcludeDevtools_useExcludeDevtoolsOption_isExcludeDevtoolsTrue() {
     properties.put("useDeprecatedExcludeDevtoolsOption", "TrUe");
-
     when(bootJar.isExcludeDevtools()).thenReturn(true);
-    // Even though devtools is on the bootJar's classpath, devtools should be excluded.
-    // (classpath doesn't matter if we use isExcludeDevtools.)
-    when(bootJar.getClasspath())
-        .thenReturn(
-            new MockFileCollection(Paths.get("lib").resolve("spring-boot-devtools-1.2.3.jar")));
 
     assertTrue(JibSpringBootExtension.shouldExcludeDevtools(project, properties, logger));
   }
@@ -179,11 +172,7 @@ public class JibSpringBootExtensionTest {
   @Test
   public void testShouldExcludeDevtools_useExcludeDevtoolsOption_isExcludeDevtoolsFalse() {
     properties.put("useDeprecatedExcludeDevtoolsOption", "true");
-
     when(bootJar.isExcludeDevtools()).thenReturn(false);
-    // Even though devtools is not on the bootJar's classpath, devtools should be kept.
-    // (classpath doesn't matter if we use isExcludeDevtools.)
-    when(bootJar.getClasspath()).thenReturn(new MockFileCollection());
 
     assertFalse(JibSpringBootExtension.shouldExcludeDevtools(project, properties, logger));
   }
@@ -228,8 +217,6 @@ public class JibSpringBootExtensionTest {
 
   @Test
   public void testFilterOutDevtools_differentDependencyLayerName() {
-    when(bootJar.getClasspath()).thenReturn(new MockFileCollection());
-
     FileEntriesLayer layer =
         buildLayer(
             "NOT dependencies",
