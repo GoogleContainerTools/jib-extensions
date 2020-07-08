@@ -25,7 +25,6 @@ import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import java.io.File;
 import java.io.IOException;
@@ -119,8 +118,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
     }
   }
 
-  @VisibleForTesting
-  void addDependencyLayers(
+  private void addDependencyLayers(
       MavenSession session, ContainerBuildPlan.Builder planBuilder, Path libDirectory)
       throws IOException {
     // Collect all artifact files involved in this Maven session.
