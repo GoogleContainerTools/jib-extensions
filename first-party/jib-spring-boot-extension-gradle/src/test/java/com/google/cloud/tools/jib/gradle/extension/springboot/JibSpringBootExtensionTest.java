@@ -87,7 +87,7 @@ public class JibSpringBootExtensionTest {
   @Mock private TaskProvider<Task> taskProvider;
   @Mock private BootJar bootJar;
 
-  private GradleData gradleData = () -> project;
+  private final GradleData gradleData = () -> project;
   private final Map<String, String> properties = new HashMap<>();
 
   private static FileEntriesLayer buildLayer(String layerName, List<Path> paths) {
