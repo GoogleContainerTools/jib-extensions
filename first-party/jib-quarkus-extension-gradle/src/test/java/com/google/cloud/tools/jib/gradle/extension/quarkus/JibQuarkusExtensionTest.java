@@ -75,7 +75,7 @@ public class JibQuarkusExtensionTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS)
   private JibExtension jibPlugin;
 
-  private final GradleData gradleData = () -> project;
+  private GradleData gradleData = () -> project;
 
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
