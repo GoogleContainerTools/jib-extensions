@@ -46,8 +46,8 @@ subprojects {
     JIB_GRADLE: '2.4.0',
 
     // for Build Plan and Jib Plugins Extension API
-    GRADLE_EXTENSION: '0.3.0',
-    MAVEN_EXTENSION: '0.3.0',
+    JIB_GRADLE_EXTENSION: '0.3.0',
+    JIB_MAVEN_EXTENSION: '0.3.0',
 
     SPRING_BOOT: '2.3.1.RELEASE', // for Spring Boot Gradle extension
     MAVEN_API: '3.5.2',
