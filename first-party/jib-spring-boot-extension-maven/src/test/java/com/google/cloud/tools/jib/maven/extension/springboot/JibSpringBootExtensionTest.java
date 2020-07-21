@@ -47,6 +47,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests for {@link JibSpringBootExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibSpringBootExtensionTest {
 

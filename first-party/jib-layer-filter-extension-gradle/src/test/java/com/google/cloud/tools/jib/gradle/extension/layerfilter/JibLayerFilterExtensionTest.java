@@ -41,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests for {@link JibLayerFilterExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibLayerFilterExtensionTest {
 

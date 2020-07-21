@@ -54,6 +54,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.gradle.tasks.bundling.BootJar;
 
+/** Tests for {@link JibSpringBootExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibSpringBootExtensionTest {
 

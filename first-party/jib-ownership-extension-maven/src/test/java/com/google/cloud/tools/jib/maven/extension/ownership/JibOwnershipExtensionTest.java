@@ -41,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests for {@link JibOwnershipExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibOwnershipExtensionTest {
 

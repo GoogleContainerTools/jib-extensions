@@ -1,0 +1,67 @@
+plugins {
+  id 'net.researchgate.release'
+  id 'maven-publish'
+  id 'eclipse'
+}
+
+dependencies {
+  compileOnly "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_MAVEN_EXTENSION}"
+  compileOnly "com.google.cloud.tools:jib-core:${dependencyVersions.JIB_CORE}"
+  compileOnly "com.google.code.findbugs:jsr305:${dependencyVersions.JSR305}"
+
+  testImplementation "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_MAVEN_EXTENSION}"
+  testImplementation "com.google.cloud.tools:jib-core:${dependencyVersions.JIB_CORE}"
+  testImplementation "junit:junit:${dependencyVersions.JUNIT}"
+  testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Version': version
+    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.maven.extension.nativeimage'
+
+    // OSGi metadata
+    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.maven.extension.nativeimage'
+    attributes 'Bundle-Name': 'Native Image Extension for Jib Maven Plugin'
+    attributes 'Bundle-Vendor': 'Google LLC'
+    attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'
+    attributes 'Bundle-License': 'https://www.apache.org/licenses/LICENSE-2.0'
+    attributes 'Export-Package': 'com.google.cloud.tools.jib.*'
+  }
+}
+
+/* RELEASE */
+configureMavenRelease()
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      pom {
+        name = 'Native Image Extension for Jib Maven Plugin'
+        description = 'Provides support for containerizing native image (standalone executable).'
+      }
+      from components.java
+    }
+  }
+}
+
+// Release plugin (git release commits and version updates)
+release {
+  tagTemplate = 'v$version-jib-native-image-extension-maven'
+  git {
+    requireBranch = /^jib-native-image-extension-maven-release-v\d+.*$/  //regex
+  }
+}
+/* RELEASE */
+
+/* ECLIPSE */
+// TODO: remove after upgrading to Gradle 5.6. (https://github.com/eclipse/buildship/issues/689)
+// Also remove the 'eclipse' plugin.
+eclipse.classpath.file.whenMerged {
+  entries.findAll {
+    it.path in ['src/test/java', 'src/test/resources', 'src/integration-test/java', 'src/integration-test/resources']
+  }.each {
+    it.entryAttributes['test'] = 'true'
+  }
+}
+/* ECLIPSE */
