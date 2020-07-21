@@ -6,10 +6,10 @@ plugins {
 }
 
 dependencies {
-  compileOnly "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
+  compileOnly "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.JIB_GRADLE_EXTENSION}"
   compileOnly "com.google.guava:guava:${dependencyVersions.GUAVA}"
 
-  testImplementation "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.GRADLE_EXTENSION}"
+  testImplementation "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.JIB_GRADLE_EXTENSION}"
   testImplementation "com.google.guava:guava:${dependencyVersions.GUAVA}"
   testImplementation "junit:junit:${dependencyVersions.JUNIT}"
   testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
