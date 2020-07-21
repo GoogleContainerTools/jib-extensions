@@ -53,6 +53,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests for {@link JibNativeImageExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibNativeImageExtensionTest {
 
@@ -303,7 +304,7 @@ public class JibNativeImageExtensionTest {
       fail();
     } catch (JibPluginExtensionException ex) {
       assertEquals(
-          "cannot auto-detect native-image executable name; consider setting 'executableName'",
+          "cannot auto-detect native-image executable name; consider setting 'imageName' property",
           ex.getMessage());
     }
   }

@@ -105,7 +105,7 @@ public class JibNativeImageExtension implements JibMavenPluginExtension<Void> {
     if (!executableName.isPresent()) {
       throw new JibPluginExtensionException(
           getClass(),
-          "cannot auto-detect native-image executable name; consider setting 'executableName'");
+          "cannot auto-detect native-image executable name; consider setting 'imageName' property");
     }
 
     String outputDirectory = project.getBuild().getDirectory();
