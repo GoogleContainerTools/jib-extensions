@@ -47,6 +47,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests for {@link JibSpringBootExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibSpringBootExtensionTest {
 
@@ -56,7 +57,7 @@ public class JibSpringBootExtensionTest {
   @Mock private MavenProject project;
   @Mock private Plugin bootPlugin;
 
-  private static FileEntriesLayer buildLayer(String layerName, List<Path> paths) {
+  private static FileEntriesLayer buildLayer(String layerName, Path... paths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
     for (Path path : paths) {
       builder.addEntry(path, AbsoluteUnixPath.get("/dest/" + path.getFileName()));
@@ -146,10 +147,9 @@ public class JibSpringBootExtensionTest {
     FileEntriesLayer layer =
         buildLayer(
             "dependencies",
-            Arrays.asList(
-                Paths.get("static").resolve("foo.txt"),
-                Paths.get("lib").resolve("spring-boot-devtools-1.2.3.jar"),
-                Paths.get("archive").resolve("bar.zip")));
+            Paths.get("static").resolve("foo.txt"),
+            Paths.get("lib").resolve("spring-boot-devtools-1.2.3.jar"),
+            Paths.get("archive").resolve("bar.zip"));
     FileEntriesLayer filtered = (FileEntriesLayer) JibSpringBootExtension.filterOutDevtools(layer);
 
     assertEquals(Arrays.asList("/dest/foo.txt", "/dest/bar.zip"), layerToExtractionPaths(filtered));
@@ -160,9 +160,8 @@ public class JibSpringBootExtensionTest {
     FileEntriesLayer layer =
         buildLayer(
             "NOT dependencies",
-            Arrays.asList(
-                Paths.get("lib").resolve("spring-boot-devtools-1.2.3.jar"),
-                Paths.get("archive").resolve("bar.zip")));
+            Paths.get("lib").resolve("spring-boot-devtools-1.2.3.jar"),
+            Paths.get("archive").resolve("bar.zip"));
     LayerObject newLayer = JibSpringBootExtension.filterOutDevtools(layer);
     assertSame(layer, newLayer);
     assertEquals(layer.getEntries(), ((FileEntriesLayer) newLayer).getEntries());
@@ -176,11 +175,10 @@ public class JibSpringBootExtensionTest {
     FileEntriesLayer layer1 =
         buildLayer(
             "dependencies",
-            Arrays.asList(
-                Paths.get("spring-boot-devtools-1.2.3.jar"),
-                Paths.get("archive").resolve("bar.zip")));
+            Paths.get("spring-boot-devtools-1.2.3.jar"),
+            Paths.get("archive").resolve("bar.zip"));
     FileEntriesLayer layer2 =
-        buildLayer("NOT dependencies", Arrays.asList(Paths.get("spring-boot-devtools-1.2.3.jar")));
+        buildLayer("NOT dependencies", Paths.get("spring-boot-devtools-1.2.3.jar"));
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
@@ -214,11 +212,10 @@ public class JibSpringBootExtensionTest {
     FileEntriesLayer layer1 =
         buildLayer(
             "dependencies",
-            Arrays.asList(
-                Paths.get("spring-boot-devtools-1.2.3.jar"),
-                Paths.get("archive").resolve("bar.zip")));
+            Paths.get("spring-boot-devtools-1.2.3.jar"),
+            Paths.get("archive").resolve("bar.zip"));
     FileEntriesLayer layer2 =
-        buildLayer("NOT dependencies", Arrays.asList(Paths.get("spring-boot-devtools-1.2.3.jar")));
+        buildLayer("NOT dependencies", Paths.get("spring-boot-devtools-1.2.3.jar"));
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 

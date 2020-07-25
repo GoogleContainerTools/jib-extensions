@@ -27,7 +27,6 @@ import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.FileEntry;
-import com.google.cloud.tools.jib.gradle.extension.GradleData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
@@ -42,11 +41,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests for {@link JibOwnershipExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibOwnershipExtensionTest {
 
   @Mock private Configuration config;
-  @Mock private GradleData gradleData;
   @Mock private ExtensionLogger logger;
 
   private static <T> List<T> mapLayerEntries(
@@ -66,7 +65,7 @@ public class JibOwnershipExtensionTest {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, logger);
     assertSame(buildPlan, newPlan);
     verify(logger).log(LogLevel.WARN, "Nothing configured for Jib Ownership Extension");
   }
@@ -80,7 +79,7 @@ public class JibOwnershipExtensionTest {
 
     try {
       new JibOwnershipExtension()
-          .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
+          .extendContainerBuildPlan(buildPlan, null, Optional.of(config), null, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibOwnershipExtension.class, ex.getExtensionClass());
@@ -117,7 +116,7 @@ public class JibOwnershipExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), null, logger);
 
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
@@ -163,7 +162,7 @@ public class JibOwnershipExtensionTest {
 
     ContainerBuildPlan newPlan =
         new JibOwnershipExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.of(config), null, logger);
 
     FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
     assertEquals(Arrays.asList("999:777"), mapLayerEntries(newLayer, FileEntry::getOwnership));
