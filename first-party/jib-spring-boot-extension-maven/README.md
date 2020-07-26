@@ -4,7 +4,7 @@ Provides extra support for Spring Boot applications. As of now, this extension p
 
 - Including and excluding `spring-boot-devtools`
 
-   Provides convenience resolution for the [`spring-boot-devtools` issue](https://github.com/GoogleContainerTools/jib/issues/2336) by including/excluding [`spring-boot-devtools`](https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-devtools) in the same way Spring Boot includes/excludes it in their Spring Boot-repackaged fat JAR. For example, Spring Boot by default excludes `spring-boot-devtols` in their repackaged JAR, so applying this extension will exclude it in the image too. On the other hand, if you set `<excludeDevtools>false` in the Spring Boot Maven Plugin, the extension will keep the dependency in the image.
+   Provides convenience resolution for the [`spring-boot-devtools` issue](https://github.com/GoogleContainerTools/jib/issues/2336) by including/excluding [`spring-boot-devtools`](https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-devtools) in the same way Spring Boot includes/excludes it in their Spring Boot-repackaged fat JAR. For example, Spring Boot by default excludes `spring-boot-devtols` in their repackaged JAR, so applying this extension by default excludes it in the image too. On the other hand, if you set `<excludeDevtools>false` in the Spring Boot Maven Plugin, the extension does nothing (resulting in having the dependency in the image).
 
    Note that one can still properly and correctly resolve this "issue" without this extension, for example, by setting up two Maven profiles, as explained in the issue link above.
 
