@@ -2,9 +2,9 @@
 
 This extension containerizes a [GraalVM native-imgae](https://www.graalvm.org/docs/reference-manual/native-image/) application configured with [Native Image Maven Plugin](https://www.graalvm.org/docs/reference-manual/native-image/#integration-with-maven).
 
-The extension expects the Native Image Maven Plugin to do the the heavy lifting of generating a native-image (binary) (with the `native-image:native-image` goal). (Here, the native "image" refers to a binary executable, not a container image.) Then the extension simply copies the binary, say, `<project root>/target/com.example.mymainclass`, into a container image and sets executable bits. It also auto-sets the image entrypoint to the binary, say, `/app/com.example.mymainclass` (unless you manually configure `<container><entrypoint>` in the main Jib configuration).
+The extension expects the `native-image-maven-plugin` to do the the heavy lifting of generating a "native image" (with the `native-image:native-image` goal). (Here, "image" refers to an executable binary, not a container image.) Then the extension simply copies the binary, say, `<project root>/target/com.example.mymainclass`, into a container image and sets executable bits. It also auto-sets the container image entrypoint to the binary, say, `/app/com.example.mymainclass` (unless you manually configure `<container><entrypoint>` in the main Jib configuration).
 
-Note you can put extra files using the Jib's [`<extraDirectories>` feature](https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin#adding-arbitrary-files-to-the-image).
+Note you can put extra files into a container image using Jib's [`<extraDirectories>` feature](https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin#adding-arbitrary-files-to-the-image).
 
 ## Examples
 
@@ -42,14 +42,14 @@ If for some reason the extension fails to auto-detect the native-image binary na
         <properties>
           <!-- Normally you won't need to set this. Let us know if the extension
                fails to auto-detect the binary name. -->
-          <imageName>my-binary-name<imageName>
+          <imageName>my-binary-name</imageName>
         </properties>
       </pluginExtension>
 ```
 
 ## Troubleshooting
 
-Keep in mind that a native image is not portable unlike Java bytecode. The Native Image Maven Plugin doesn't support cross-compilation, so the native-image binary should be built on the same architecture as the runtime architecture. Otherwise, you may get into a puzzling error:
+Unlike Java bytecode, a native image is not portable but platform-specific. The Native Image Maven Plugin doesn't support cross-compilation, so the native-image binary should be built on the same architecture as the runtime architecture. Otherwise, you may get into a puzzling error:
 
 ```
 $ docker run -it --rm native-hello
