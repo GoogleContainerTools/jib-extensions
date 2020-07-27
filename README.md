@@ -143,23 +143,42 @@ Some extensions may expect you to provide extension-specific user configuration.
      }
    ```
 - For extensions that define a complex configuration, use `pluginExtension.configuration`. For example,
-   ```gradle
-       pluginExtension {
-         implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
-         configuration {
-           filters {
-             filter {
-               glob = '**/google-*.jar'
-               toLayer = 'google libraries'
-             }
-             filter {
-               glob = '/app/libs/in-house-*.jar'
-               toLayer = 'in-house dependencies'
-             }
-           }
-         }
-       }
-   ```
+   - Groovy
+      ```gradle
+          pluginExtension {
+            implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
+            configuration {
+              filters {
+                filter {
+                  glob = '**/google-*.jar'
+                  toLayer = 'google libraries'
+                }
+                filter {
+                  glob = '/app/libs/in-house-*.jar'
+                  toLayer = 'in-house dependencies'
+                }
+              }
+            }
+          }
+      ```
+   - Kotlin
+      ```kotlin
+          pluginExtension {
+            implementation = "com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension"
+            configuration(Action<com.google.cloud.tools.jib.gradle.extension.layerfilter.Configuration> {
+              filters {
+                filter {
+                  glob = "**/google-*.jar"
+                  toLayer = "google libraries"
+                }
+                filter {
+                  glob = "/app/libs/in-house-*.jar"
+                  toLayer = "in-house dependencies"
+                }
+              }
+            }
+          }
+      ```
 
 ## Writing Your Own Extensions
 
