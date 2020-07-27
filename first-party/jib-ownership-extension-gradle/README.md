@@ -40,6 +40,23 @@ jib {
 }
 ```
 
+Kotlin requires specifying the type for `pluginExtension.configuration`.
+
+```kotlin
+  pluginExtension {
+    implementation = "com.google.cloud.tools.jib.gradle.extension.ownership.JibOwnershipExtension"
+    configuration(Action<com.google.cloud.tools.jib.gradle.extension.ownership.Configuration> {
+      rules {
+        rule {
+          glob = "/app/classes/**"
+          ownership = "300"
+        }
+        ...
+      }
+    })
+  }
+```
+
 ## Known Issues
 
 #### Unable to change ownership of some parent directories.

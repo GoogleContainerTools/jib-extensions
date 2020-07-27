@@ -53,6 +53,22 @@ jib {
 }
 ```
 
+Kotlin requires specifying the type for `pluginExtension.configuration`.
+
+```kotlin
+  pluginExtension {
+    implementation = "com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension"
+    configuration(Action<com.google.cloud.tools.jib.gradle.extension.layerfilter.Configuration> {
+      filters {
+        filter {
+          glob = "**/*.jar"
+        }
+        ...
+      }
+    })
+  }
+```
+
 ## Detailed Filtering Rules
 
 - If multiple filters match a file, the last filter in the order applies to the file.
