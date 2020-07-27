@@ -72,31 +72,31 @@ Some extensions may expect you to provide extension-specific user configuration.
 
 - For extensions that accept simple string properties (map), use `<pluginExtension><properties>`. For example,
    ```xml
-           <pluginExtension>
-             <implementation>com.example.ExtensionAcceptingMapConfig</implementation>
-             <properties>
-               <customFlag>true</customFlag>
-               <layerName>samples</layerName>
-             </properties>
-           </pluginExtension>
+   <pluginExtension>
+     <implementation>com.example.ExtensionAcceptingMapConfig</implementation>
+     <properties>
+       <customFlag>true</customFlag>
+       <layerName>samples</layerName>
+     </properties>
+   </pluginExtension>
    ```
 - For extensions that define a complex configuration, use `<pluginExtension><configuration implementation=...>` (not Jib's `<configuration>`). Note that the class for the `implementation` XML attribute should be the extension-supplied configuration class and not the main extension class. For example,
    ```xml
-           <pluginExtension>
-             <implementation>com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension</implementation>
-             <configuration implementation="com.google.cloud.tools.jib.maven.extension.layerfilter.Configuration">
-               <filters>
-                 <filter>
-                   <glob>**/google-*.jar</glob>
-                   <toLayer>google libraries</toLayer>
-                 </filter>
-                 <filter>
-                   <glob>/app/libs/in-house-*.jar</glob>
-                   <toLayer>in-house dependencies</toLayer>
-                 </filter>
-               </filters>
-             </configuration>
-         </pluginExtension>
+   <pluginExtension>
+     <implementation>com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension</implementation>
+     <configuration implementation="com.google.cloud.tools.jib.maven.extension.layerfilter.Configuration">
+       <filters>
+         <filter>
+           <glob>**/google-*.jar</glob>
+           <toLayer>google libraries</toLayer>
+         </filter>
+         <filter>
+           <glob>/app/libs/in-house-*.jar</glob>
+           <toLayer>in-house dependencies</toLayer>
+         </filter>
+       </filters>
+     </configuration>
+   </pluginExtension>
    ```
 
 ### Gradle<a name="using-jib-plugin-extensions-gradle"></a>
@@ -135,49 +135,49 @@ Some extensions may expect you to provide extension-specific user configuration.
 
 - For extensions that accept simple string properties (map), use `pluginExtension.properties`. For example,
    ```gradle
-     pluginExtensions {
-       pluginExtension {
-         implementation = 'com.example.ExtensionAcceptingMapConfig'
-         properties = [customFlag: 'true', layerName: 'samples']
-       }
+   pluginExtensions {
+     pluginExtension {
+       implementation = 'com.example.ExtensionAcceptingMapConfig'
+       properties = [customFlag: 'true', layerName: 'samples']
      }
+   }
    ```
 - For extensions that define a complex configuration, use `pluginExtension.configuration`. For example,
    - Groovy
       ```gradle
-          pluginExtension {
-            implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
-            configuration {
-              filters {
-                filter {
-                  glob = '**/google-*.jar'
-                  toLayer = 'google libraries'
-                }
-                filter {
-                  glob = '/app/libs/in-house-*.jar'
-                  toLayer = 'in-house dependencies'
-                }
-              }
+      pluginExtension {
+        implementation = 'com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension'
+        configuration {
+          filters {
+            filter {
+              glob = '**/google-*.jar'
+              toLayer = 'google libraries'
+            }
+            filter {
+              glob = '/app/libs/in-house-*.jar'
+              toLayer = 'in-house dependencies'
             }
           }
+        }
+      }
       ```
    - Kotlin
       ```kotlin
-          pluginExtension {
-            implementation = "com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension"
-            configuration(Action<com.google.cloud.tools.jib.gradle.extension.layerfilter.Configuration> {
-              filters {
-                filter {
-                  glob = "**/google-*.jar"
-                  toLayer = "google libraries"
-                }
-                filter {
-                  glob = "/app/libs/in-house-*.jar"
-                  toLayer = "in-house dependencies"
-                }
-              }
+      pluginExtension {
+        implementation = "com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension"
+        configuration(Action<com.google.cloud.tools.jib.gradle.extension.layerfilter.Configuration> {
+          filters {
+            filter {
+              glob = "**/google-*.jar"
+              toLayer = "google libraries"
+            }
+            filter {
+              glob = "/app/libs/in-house-*.jar"
+              toLayer = "in-house dependencies"
             }
           }
+        })
+      }
       ```
 
 ## Writing Your Own Extensions

@@ -65,7 +65,7 @@ Kotlin requires specifying the type for `pluginExtension.configuration`.
         }
         ...
       }
-    }
+    })
   }
 ```
 
