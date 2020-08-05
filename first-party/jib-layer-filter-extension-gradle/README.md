@@ -1,6 +1,6 @@
 # Jib Layer-Filter Extension
 
-A general-purpose layer-filter extension that enables fine-grained layer control, including deleting files and moving files into new layers. Note that the extension can only filters files put by Jib; it cannot filter files in the base image.
+A general-purpose layer-filter extension that enables fine-grained layer control, including deleting files and moving files into new layers. Note that the extension can only filter files put by Jib; it cannot filter files in the base image.
 
 ## Examples
 
