@@ -30,7 +30,7 @@ The [Container Build Plan](https://github.com/GoogleContainerTools/jib/blob/mast
 
 ### Maven<a name="using-jib-plugin-extensions-maven"></a>
 
-1. Add extensions as dependencies to the Jib `<plugin>` block in `pom.xml`
+1. Add extensions as dependencies to the Jib `<plugin>` block in `pom.xml`.
 2. Specify extension implementation classes with `<pluginExtensions>` in Jib's `<configuration>`.
 
 The following example adds and runs the [Jib Layer-Filter Extension](first-party/jib-layer-filter-extension-maven).
@@ -62,7 +62,7 @@ The following example adds and runs the [Jib Layer-Filter Extension](first-party
   </plugin>
 ```
 
-When properly configured and loaded, Jib outputs loaded extension in the log. When you configure multiple `<pluginExtension>`s, Jib runs the extensions in the given order.
+When properly configured and loaded, Jib outputs the loaded extensions in the log. When you configure multiple `<pluginExtension>`s, Jib runs the extensions in the given order.
 ```
 [INFO] --- jib-maven-plugin:2.4.0:build (default-cli) @ helloworld ---
 [INFO] Running extension: com.google.cloud.tools.jib.maven.extension.layerfilter.JibLayerFilterExtension
@@ -126,7 +126,7 @@ jib {
 }
 ```
 
-When properly configured and loaded, Jib outputs loaded extension in the log. When you configure multiple `jib.pluginExtension`s, Jib runs the extensions in the given order.
+When properly configured and loaded, Jib outputs the loaded extensions in the log. When you configure multiple `jib.pluginExtension`s, Jib runs the extensions in the given order.
 ```
 Running extension: com.google.cloud.tools.jib.gradle.extension.layerfilter.JibLayerFilterExtension
 ```
@@ -229,12 +229,14 @@ Sometimes, you may want to make your extension configurable by the extension end
 
 ### Version Matrix
 
-| jib-maven-plugin | jib-maven-plugin-extension-api |
+| jib-maven-plugin | [jib-maven-plugin-extension-api](https://search.maven.org/artifact/com.google.cloud.tools/jib-maven-plugin-extension-api) |
 |:----------------:|:------------------------------:|
-| 2.3.0 - current  | 0.3.0                          |
+| 2.5.0 - current  | 0.4.0                          |
+| 2.3.0 - 2.4.0    | 0.3.0                          |
 
-| jib-gradle-plugin | jib-gradle-plugin-extension-api | Jib Plugin Runtime Gradle API\* |
+| jib-gradle-plugin | [jib-gradle-plugin-extension-api](https://search.maven.org/artifact/com.google.cloud.tools/jib-gradle-plugin-extension-api) | Jib Plugin Runtime Gradle API\* |
 |:-----------------:|:-------------------------------:|:-------------------------------:|
-| 2.4.0 - current   | 0.3.0                           | 5.2.1                           |
+| 2.5.0 - current   | 0.4.0                           | 5.2.1                           |
+| 2.4.0             | 0.3.0                           | 5.2.1                           |
 
-*\* For example, it is recommended to use Gradle 5.2.1 or only use the API available in 5.2.1 to develop an extension for Jib Gradle 2.4.0.*
+*\* For example, it is recommended to use Gradle 5.2.1 or only use the API available in 5.2.1 to develop an extension for Jib Gradle 2.5.0.*
