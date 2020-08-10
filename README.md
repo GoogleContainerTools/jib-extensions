@@ -193,7 +193,7 @@ It is easy to write an extension! If you have written a useful extension, let us
       <dependency>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>jib-maven-plugin-extension-api</artifactId>
-        <version>0.3.0</version>
+        <version>0.4.0</version>
         <scope>provided</scope>
       </dependency>
    </dependencies>
@@ -206,7 +206,7 @@ It is easy to write an extension! If you have written a useful extension, let us
    }
 
    dependencies {
-     compileOnly 'com.google.cloud.tools:jib-gradle-plugin-extension-api:0.3.0'
+     compileOnly 'com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0'
    }
    ```
 2. Add a text file `src/main/resources/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension` (Maven) / `src/main/resources/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension` (Gradle) and list your classes that implements the Jib Maven/Gradle Plugin Extension API below. See the [Maven](first-party/jib-ownership-extension-maven/src/main/resources/META-INF/services/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension) and [Gradle](first-party/jib-ownership-extension-gradle/src/main/resources/META-INF/services/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension) examples.
