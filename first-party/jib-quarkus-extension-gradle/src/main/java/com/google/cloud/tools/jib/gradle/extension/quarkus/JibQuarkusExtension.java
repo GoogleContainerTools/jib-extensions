@@ -26,6 +26,7 @@ import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
+import com.google.common.base.Strings;
 import com.google.common.base.Verify;
 import java.io.File;
 import java.io.IOException;
@@ -172,7 +173,10 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
 
   private void readJibConfigurations(Project project) {
     JibExtension jibPlugin = project.getExtensions().findByType(JibExtension.class);
-    appRoot = AbsoluteUnixPath.get(jibPlugin.getContainer().getAppRoot());
+    String appRootValue = jibPlugin.getContainer().getAppRoot();
+    if (!Strings.isNullOrEmpty(appRootValue)) {
+      appRoot = AbsoluteUnixPath.get(appRootValue);
+    }
     jvmFlags = jibPlugin.getContainer().getJvmFlags();
   }
 }
