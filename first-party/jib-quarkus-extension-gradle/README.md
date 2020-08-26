@@ -14,7 +14,7 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
 // should be at the top of build.gradle
 buildscript {
   dependencies {
-    classpath('com.google.cloud.tools:jib-quarkus-extension-gradle:0.1.0')
+    classpath('com.google.cloud.tools:jib-quarkus-extension-gradle:0.1.1')
   }
 }
 
