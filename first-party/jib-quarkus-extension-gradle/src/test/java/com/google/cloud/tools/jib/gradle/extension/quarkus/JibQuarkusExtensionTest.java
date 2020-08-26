@@ -142,6 +142,20 @@ public class JibQuarkusExtensionTest {
   }
 
   @Test
+  public void testExtendContainerBuildPlan_emptyAppRoot() throws JibPluginExtensionException {
+    when(jibPlugin.getContainer().getAppRoot()).thenReturn("");
+
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    ContainerBuildPlan newPlan =
+        new JibQuarkusExtension()
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), gradleData, logger);
+
+    assertEquals(
+        Arrays.asList("java", "-verbose:gc", "-Dmy.property=value", "-jar", "/app/app.jar"),
+        newPlan.getEntrypoint());
+  }
+
+  @Test
   public void testExtendContainerBuildPlan_noQuarkusRunnerJar() throws IOException {
     Files.delete(tempFolder.getRoot().toPath().resolve("build").resolve("my-app-runner.jar"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
