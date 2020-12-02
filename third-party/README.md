@@ -6,6 +6,7 @@ If you have written a useful extension that you think will benefit the Jib commu
 
 Got interested in writing an extension? It's easy! Take a look at ["Writing Your Own Extensions"](../README.md#writing-your-own-extensions).
 
+- [Bundle Packaging Plugin Extension](https://github.com/thought-gang/jib-maven-plugin-extension.git) - An extension to suppport the Maven packaging type "bundle"
 - to be added
 - ... 
 - ...
