@@ -1,11 +1,11 @@
 // define all versioned plugins here and apply in subprojects as necessary without version
 plugins {
   id 'com.github.sherter.google-java-format' version '0.9' apply false
-  id 'net.ltgt.errorprone' version '1.2.1' apply false
+  id 'net.ltgt.errorprone' version '1.3.0' apply false
   id 'net.researchgate.release' version '2.8.1' apply false
 
   // apply so we can correctly configure the test runner to be gradle at the project level
-  id 'org.jetbrains.gradle.plugin.idea-ext' version '0.8.1'
+  id 'org.jetbrains.gradle.plugin.idea-ext' version '0.10'
 }
 
 // run tests in intellij using gradle test runner
@@ -39,11 +39,11 @@ subprojects {
   /* PROJECT DEPENDENCY VERSIONS */
   // define all common versioned dependencies here
   project.ext.dependencyVersions = [
-    GUAVA: '29.0-jre',
+    GUAVA: '30.0-jre',
     JSR305: '3.0.2', // transitively pulled in by GUAVA
 
-    JIB_CORE: '0.15.0',
-    JIB_GRADLE: '2.6.0',
+    JIB_CORE: '0.16.0',
+    JIB_GRADLE: '2.7.0',
 
     // for Build Plan and Jib Plugins Extension API
     JIB_GRADLE_EXTENSION: '0.4.0',
@@ -53,8 +53,8 @@ subprojects {
     MAVEN_API: '3.6.3',
 
     //test
-    JUNIT: '4.13',
-    MOCKITO_CORE: '3.4.6',
+    JUNIT: '4.13.1',
+    MOCKITO_CORE: '3.6.28',
     SLF4J_API: '1.7.30',
     SYSTEM_RULES: '1.19.0',
   ]
@@ -63,7 +63,7 @@ subprojects {
   /* ERROR PRONE */
   dependencies {
     // NullAway errorprone plugin
-    annotationProcessor 'com.uber.nullaway:nullaway:0.7.10'
+    annotationProcessor 'com.uber.nullaway:nullaway:0.8.0'
     errorprone 'com.google.errorprone:error_prone_core:2.3.4'
     // Using github.com/google/error-prone-javac is required when running on
     // JDK 8. Remove when migrating to JDK 11.
