@@ -32,4 +32,5 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run tests
         run: |
+          cd first-party
           ./gradlew clean build --stacktrace
