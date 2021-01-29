@@ -3,7 +3,7 @@
 This repository contains extensions to the
 [Jib](https://github.com/GoogleContainerTools/jib) Maven and Gradle build plugins.
 
-The Jib Extension Framework enables anyone to easily extend and tailor the Jib plugins behavior to their liking. Jib extensions are supported from Jib Maven 2.3.0 and Jib Gradle 2.4.0.
+The Jib Extension Framework enables anyone to easily extend Jib's behavior to their needs. Jib extensions are supported from Jib Maven 2.3.0 and Jib Gradle 2.4.0.
 
 - [1st-party extensions](first-party): extensions developed and maintained by the Jib team
 - [3rd-party extensions](third-party): links to externally developed extensions
@@ -216,11 +216,11 @@ It is easy to write an extension! If you have written a useful extension, let us
 
 The extension API passes in [`ContainerBuildPlan`](https://github.com/GoogleContainerTools/jib/blob/master/jib-build-plan/src/main/java/com/google/cloud/tools/jib/api/buildplan/ContainerBuildPlan.java), which is the container build plan originally prepared by Jib plugins. The build plan describes in a declarative way how it plans to build a container image.
 
-The class is a Java API for [Container Build Plan Specification](https://github.com/GoogleContainerTools/jib/blob/master/proposals/container-build-plan-spec.md). The Container Build Plan Specification is a general specification independent of Jib. Likewise, the Container Build Plan Java API is a light-weight, standalone API implementing the spec published to Maven Central ([`jib-build-plan`](https://search.maven.org/artifact/com.google.cloud.tools/jib-build-plan). The Build Plan classes, once instantiated, are all stateless, immutable "value classes" (holding only simple values). You can inspect the values using simple getters, and when you want to "modify" values, use `toBuilder()` to create new instances.
+The class is a Java API for [Container Build Plan Specification](https://github.com/GoogleContainerTools/jib/blob/master/proposals/container-build-plan-spec.md). The Container Build Plan Specification is a general specification independent of Jib. The Container Build Plan Java API is a light-weight, standalone API implementing the spec, and it is published to Maven Central ([`jib-build-plan`](https://search.maven.org/artifact/com.google.cloud.tools/jib-build-plan)). The Build Plan classes, once instantiated, are all stateless, immutable "value classes" (holding only simple values). You can inspect the values using simple getters, and when you want to "modify" values, use `toBuilder()` to create new instances.
 
 ### Defining Extension-Specific Configuration
 
-Sometimes, you may want to make your extension configurable by the extension end-users. See #using-jib-plugin-extensions to understand how end-users can provide extra configuration to an extension.
+Sometimes, you may want to make your extension configurable by the extension end-users. See ["Using Jib Plugin Extensions"](#using-jib-plugin-extensions) to understand how end-users can provide extra configuration to an extension.
 
 - Simple string properties (map): the Extension API has a built-in support for end-users passing simple string map. If your extension does not need complex configuration structure, prefer this approach.
 
