@@ -17,7 +17,6 @@
 package com.google.cloud.tools.jib.maven.extension.layerfilter;
 
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
-import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan.Builder;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.FileEntry;
 import com.google.cloud.tools.jib.api.buildplan.LayerObject;
@@ -35,20 +34,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.maven.project.DefaultDependencyResolutionRequest;
-import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 
@@ -135,14 +132,14 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     logger.log(LogLevel.LIFECYCLE, "Moving parent dependencies to new layers.");
 
 
-    // the expected paths for the parent dependency
-    Set<String> parentDependenciesPaths = getParentDependencies(mavenData).stream()
+    // the key is the expected path for the parent dependency
+    Map<String, Artifact> parentDependencies = getParentDependencies(mavenData).stream()
+        .map(d -> d.getArtifact())
         //TODO: configurable?
-        .map(d-> "/app/libs/"+d.getArtifact().getArtifactId()+"-"+d.getArtifact().getVersion()+".jar")
-        .collect(Collectors.toSet());
+        .collect(Collectors.toMap(a -> "/app/libs/"+a.getArtifactId()+"-"+a.getVersion()+".jar", a -> a));
     
     // parent dependencies that have not been found in any layer (due to different version or filtering)
-    Set<String> parentDependenciesPathsNotFound = new HashSet<>(parentDependenciesPaths);
+    Map<String, Artifact> parentDependenciesNotFound = new HashMap<>(parentDependencies);
     
     List<FileEntriesLayer.Builder> newLayers = new ArrayList<>();
     
@@ -160,11 +157,11 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       
       l.getEntries().forEach(fe -> {
         String path = fe.getExtractionPath().toString();
-        if(parentDependenciesPaths.contains(path)) {
+        if(parentDependencies.containsKey(path)) {
           // move to parent layer
           toParentLayerBuilder.addEntry(fe);
           // mark parent dep as found
-          parentDependenciesPathsNotFound.remove(path);
+          parentDependenciesNotFound.remove(path);
         } else {
           //keep in original layer
           toLayerBuilder.addEntry(fe);
@@ -174,8 +171,9 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     });
     
-    parentDependenciesPathsNotFound.forEach(p -> logger.log(LogLevel.ERROR, "Dependency from parent not found: "+p));
-
+    parentDependenciesNotFound.forEach((path, artifact) -> {     
+      logger.log(LogLevel.ERROR, "Dependency from parent not found: "+artifact );
+    });
 
     return buildPlanWithNewLayers(buildPlan, newLayers);
   }
@@ -203,6 +201,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     request.setResolutionFilter(new ScopeDependencyFilter("test"));
     DependencyResolutionResult resolutionResult = resolver.resolve(request); 
  
+    //TODO: Probably should use resolved dependencies, where snapshot versions are expanded!
     return resolutionResult.getDependencies();
     } catch (ComponentLookupException | DependencyResolutionException e) {
       throw new RuntimeException("Error when getting parent dependencies: ", e);
