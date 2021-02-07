@@ -17,6 +17,7 @@
 package com.google.cloud.tools.jib.maven.extension.layerfilter;
 
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
+import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan.Builder;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.FileEntry;
 import com.google.cloud.tools.jib.api.buildplan.LayerObject;
@@ -33,11 +34,23 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DefaultProjectBuildingRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionResult;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 
 public class JibLayerFilterExtension implements JibMavenPluginExtension<Configuration> {
 
@@ -102,8 +115,100 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
         .map(FileEntriesLayer.Builder::build)
         .filter(layer -> !layer.getEntries().isEmpty())
         .forEach(newPlanBuilder::addLayer);
+    
+   
+    
+    ContainerBuildPlan newPlan = newPlanBuilder.build();
+    
+    newPlan = moveParentDepsToNewLayers(newPlan, mavenData, logger);
+    
+    return newPlan;
+  }
+
+  private ContainerBuildPlan moveParentDepsToNewLayers(ContainerBuildPlan buildPlan, MavenData mavenData,
+      ExtensionLogger logger) {
+
+    if (mavenData.getMavenProject().getParent() == null) {
+      // Keep plan unchanged
+      return buildPlan;
+    }
+    logger.log(LogLevel.LIFECYCLE, "Moving parent dependencies to new layers.");
+
+
+    // the expected paths for the parent dependency
+    Set<String> parentDependenciesPaths = getParentDependencies(mavenData).stream()
+        //TODO: configurable?
+        .map(d-> "/app/libs/"+d.getArtifact().getArtifactId()+"-"+d.getArtifact().getVersion()+".jar")
+        .collect(Collectors.toSet());
+    
+    // parent dependencies that have not been found in any layer (due to different version or filtering)
+    Set<String> parentDependenciesPathsNotFound = new HashSet<>(parentDependenciesPaths);
+    
+    List<FileEntriesLayer.Builder> newLayers = new ArrayList<>();
+    
+
+    @SuppressWarnings("unchecked")
+    List<FileEntriesLayer> originalLayers = ((List<FileEntriesLayer>) buildPlan.getLayers());
+    originalLayers.forEach(l -> {
+      // for each layer, create a parent layer
+      FileEntriesLayer.Builder toParentLayerBuilder = FileEntriesLayer.builder().setName(l.getName()+" parent");
+      newLayers.add(toParentLayerBuilder);
+      // ... and the normal layer
+      FileEntriesLayer.Builder toLayerBuilder = FileEntriesLayer.builder().setName(l.getName());
+      newLayers.add(toLayerBuilder);
+     
+      
+      l.getEntries().forEach(fe -> {
+        String path = fe.getExtractionPath().toString();
+        if(parentDependenciesPaths.contains(path)) {
+          // move to parent layer
+          toParentLayerBuilder.addEntry(fe);
+          // mark parent dep as found
+          parentDependenciesPathsNotFound.remove(path);
+        } else {
+          //keep in original layer
+          toLayerBuilder.addEntry(fe);
+        }
+        
+      });
+
+    });
+    
+    parentDependenciesPathsNotFound.forEach(p -> logger.log(LogLevel.ERROR, "Dependency from parent not found: "+p));
+
+
+    return buildPlanWithNewLayers(buildPlan, newLayers);
+  }
+
+  private ContainerBuildPlan buildPlanWithNewLayers(ContainerBuildPlan buildPlan, List<FileEntriesLayer.Builder> newLayers) {
+    ContainerBuildPlan.Builder newPlanBuilder = buildPlan.toBuilder();
+    newPlanBuilder.setLayers(Collections.emptyList());
+    
+    // Add newly created non-empty to-layers (if any).
+    newLayers
+        .stream()
+        .map(FileEntriesLayer.Builder::build)
+        .filter(layer -> !layer.getEntries().isEmpty())
+        .forEach(newPlanBuilder::addLayer);
+    
     return newPlanBuilder.build();
   }
+
+  private List<Dependency> getParentDependencies(MavenData mavenData) {
+    try {
+    ProjectDependenciesResolver resolver = (ProjectDependenciesResolver) mavenData.getMavenSession()
+        .lookup(org.apache.maven.project.ProjectDependenciesResolver.class.getName());
+    
+    DefaultDependencyResolutionRequest request = new DefaultDependencyResolutionRequest(mavenData.getMavenProject().getParent(), mavenData.getMavenSession().getRepositorySession());
+    request.setResolutionFilter(new ScopeDependencyFilter("test"));
+    DependencyResolutionResult resolutionResult = resolver.resolve(request); 
+ 
+    return resolutionResult.getDependencies();
+    } catch (ComponentLookupException | DependencyResolutionException e) {
+      throw new RuntimeException("Error when getting parent dependencies: ", e);
+    }
+  }
+
 
   private void preparePathMatchersAndLayerBuilders(
       ContainerBuildPlan buildPlan, Configuration config) throws JibPluginExtensionException {
