@@ -29,6 +29,7 @@ subprojects {
   apply plugin: 'checkstyle'
   apply plugin: 'com.github.sherter.google-java-format'
   apply plugin: 'net.ltgt.errorprone'
+  apply plugin: 'jacoco'
 
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
@@ -267,6 +268,15 @@ subprojects {
     }
   }
   /* MAVEN CENTRAL RELEASE */
+
+  /* TEST COVERAGE */
+  jacocoTestReport {
+    reports {
+      xml.enabled true
+      html.enabled false
+    }
+  }
+  /* TEST COVERAGE */
 }
 
 
