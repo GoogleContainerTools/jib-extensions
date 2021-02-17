@@ -10,7 +10,7 @@ The Quarkus app framework prepares a special "runner" JAR and aguments dependenc
 
 Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions) for applying a Jib plugin extension.
 
-Note that `<container><mainClass>` should be set to some bogus value.
+Note that `<container><mainClass>` should be set to some placeholder value to suppress Jib warning about missing main class.
 
 ```xml
 <plugin>
