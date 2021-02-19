@@ -7,6 +7,7 @@ If you have written a useful extension that you think will benefit the Jib commu
 Interested in writing an extension? It's easy! Take a look at ["Writing Your Own Extensions"](../README.md#writing-your-own-extensions).
 
 - OSGi Bundle Packaging Plugin Extension ([Maven](https://github.com/thought-gang/jib-maven-plugin-extension.git)): an extension to containerize an OSGI bundle (Maven packaging type `bundle`)
+- Layer With Modification Time ([Maven](https://github.com/infobip/jib-layer-with-modification-time-extension-maven)): an extension for selectively setting file timestamps to build time (eg. for hosted web resources)
 
 - to be added
 - ... 
