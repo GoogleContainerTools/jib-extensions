@@ -40,18 +40,26 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.apache.maven.project.DefaultDependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.ProjectDependenciesResolver;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 
+@Named
+@Singleton
 public class JibLayerFilterExtension implements JibMavenPluginExtension<Configuration> {
 
   private Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
+  
+  @Inject
+  private ProjectDependenciesResolver dependencyResolver;
 
   // (layer name, layer builder) map for new layers of configured <toLayer>
   @VisibleForTesting Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
@@ -194,20 +202,17 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
   private List<Dependency> getParentDependencies(MavenData mavenData) {
     try {
-    ProjectDependenciesResolver resolver = (ProjectDependenciesResolver) mavenData.getMavenSession()
-        .lookup(org.apache.maven.project.ProjectDependenciesResolver.class.getName());
-    
-    DefaultDependencyResolutionRequest request = new DefaultDependencyResolutionRequest(mavenData.getMavenProject().getParent(), mavenData.getMavenSession().getRepositorySession());
-    request.setResolutionFilter(new ScopeDependencyFilter("test"));
-    DependencyResolutionResult resolutionResult = resolver.resolve(request); 
- 
-    //TODO: Probably should use resolved dependencies, where snapshot versions are expanded!
-    return resolutionResult.getDependencies();
-    } catch (ComponentLookupException | DependencyResolutionException e) {
+      
+      DefaultDependencyResolutionRequest request = new DefaultDependencyResolutionRequest(mavenData.getMavenProject().getParent(), mavenData.getMavenSession().getRepositorySession());
+      request.setResolutionFilter(new ScopeDependencyFilter("test"));
+      DependencyResolutionResult resolutionResult = dependencyResolver.resolve(request); 
+   
+      //TODO: Probably should use resolved dependencies, where snapshot versions are expanded!
+      return resolutionResult.getDependencies();
+    } catch (DependencyResolutionException e) {
       throw new RuntimeException("Error when getting parent dependencies: ", e);
     }
   }
-
 
   private void preparePathMatchersAndLayerBuilders(
       ContainerBuildPlan buildPlan, Configuration config) throws JibPluginExtensionException {
