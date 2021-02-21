@@ -145,6 +145,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
             .map(d -> d.getArtifact())
             // TODO: configurable?
             .collect(
+                // TODO: getVersion or getBaseVersion? check in jib, which version it is...
                 Collectors.toMap(
                     a -> "/app/libs/" + a.getArtifactId() + "-" + a.getVersion() + ".jar", a -> a));
 
@@ -187,7 +188,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     parentDependenciesNotFound.forEach(
         (path, artifact) -> {
-          logger.log(LogLevel.ERROR, "Dependency from parent not found: " + artifact);
+          logger.log(LogLevel.ERROR, "Dependency from parent not found: " + path);
         });
 
     return buildPlanWithNewLayers(buildPlan, newLayers);

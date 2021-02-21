@@ -44,6 +44,8 @@ import org.apache.maven.project.DependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -94,6 +96,13 @@ public class JibLayerFilterExtensionTest {
     when(filter.getGlob()).thenReturn(glob);
     when(filter.getToLayer()).thenReturn(toLayer);
     return filter;
+  }
+
+  private static Dependency mockDependency(String artifactId, String version) {
+    Artifact artifact = mock(Artifact.class);
+    when(artifact.getArtifactId()).thenReturn(artifactId);
+    when(artifact.getVersion()).thenReturn(version);
+    return new Dependency(artifact, null);
   }
 
   @Test
@@ -358,7 +367,7 @@ public class JibLayerFilterExtensionTest {
   @Test
   public void testExtendContainerBuildPlan_createParentLayers_noParentDependencies()
       throws JibPluginExtensionException {
-    FileEntriesLayer layer1 = buildLayer("", Arrays.asList("/foo"));
+    FileEntriesLayer layer1 = buildLayer("", Arrays.asList("/app/libs/foo-1.0.0.jar"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer1).build();
     Configuration cfg = new Configuration();
     cfg.setCreateParentLayers(true);
@@ -375,5 +384,49 @@ public class JibLayerFilterExtensionTest {
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     assertEquals("", newLayer1.getName());
     assertEquals(layer1.getEntries(), newLayer1.getEntries());
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_withParentDependencies()
+      throws JibPluginExtensionException {
+    FileEntriesLayer layer1 =
+        buildLayer("layer1", Arrays.asList("/app/libs/foo-1.0.0.jar", "/app/libs/bar-2.0.0.jar", "/app/libs/wrong-version-2.0.0.jar"));
+    FileEntriesLayer layer2 = buildLayer("layer2", Arrays.asList("/app/libs/blah-3.0.0.jar"));
+
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
+    Configuration cfg = new Configuration();
+    cfg.setCreateParentLayers(true);
+
+    Dependency fooDependency = mockDependency("foo", "1.0.0");
+    Dependency blahDependency = mockDependency("blah", "3.0.0");
+    // If the version does not match, the dependency must not be moved to parent layer
+    Dependency wrongVersionDependency = mockDependency("wrong-version", "1.0.0");
+
+    when(dependencyResolutionResult.getDependencies())
+        .thenReturn(Arrays.asList(fooDependency, blahDependency, wrongVersionDependency));
+
+    JibLayerFilterExtension extension = new JibLayerFilterExtension();
+    extension.setDependencyResolver(projectDependenciesResolver);
+
+    ContainerBuildPlan newPlan =
+        extension.extendContainerBuildPlan(buildPlan, null, Optional.of(cfg), mavenData, logger);
+
+    assertEquals(3, newPlan.getLayers().size());
+
+    List<FileEntriesLayer> expectedNewLayers =
+        Arrays.asList(
+            buildLayer("layer1-parent", Arrays.asList("/app/libs/foo-1.0.0.jar")),
+            buildLayer("layer1", Arrays.asList("/app/libs/bar-2.0.0.jar", "/app/libs/wrong-version-2.0.0.jar")),
+            buildLayer("layer2-parent", Arrays.asList("/app/libs/blah-3.0.0.jar")));
+
+    for (int i = 0; i < expectedNewLayers.size(); i++) {
+      assertEquals(expectedNewLayers.get(i).getName(), newPlan.getLayers().get(i).getName());
+      assertEquals(
+          expectedNewLayers.get(i).getEntries(),
+          ((FileEntriesLayer) newPlan.getLayers().get(i)).getEntries());
+    }
+    
+    verify(logger).log(LogLevel.ERROR, "Dependency from parent not found: /app/libs/wrong-version-1.0.0.jar");
   }
 }
