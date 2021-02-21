@@ -39,11 +39,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-
 import org.apache.maven.project.DefaultDependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionResult;
@@ -57,9 +55,8 @@ import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 public class JibLayerFilterExtension implements JibMavenPluginExtension<Configuration> {
 
   private Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
-  
-  @Inject
-  private ProjectDependenciesResolver dependencyResolver;
+
+  @Inject private ProjectDependenciesResolver dependencyResolver;
 
   // (layer name, layer builder) map for new layers of configured <toLayer>
   @VisibleForTesting Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
@@ -120,94 +117,108 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
         .map(FileEntriesLayer.Builder::build)
         .filter(layer -> !layer.getEntries().isEmpty())
         .forEach(newPlanBuilder::addLayer);
-    
-   
-    
+
     ContainerBuildPlan newPlan = newPlanBuilder.build();
-    
-    newPlan = moveParentDepsToNewLayers(newPlan, mavenData, logger);
-    
+
+    if (config.get().isCreateParentLayers()) {
+      newPlan = moveParentDepsToNewLayers(newPlan, mavenData, logger);
+    }
+
     return newPlan;
   }
 
-  private ContainerBuildPlan moveParentDepsToNewLayers(ContainerBuildPlan buildPlan, MavenData mavenData,
-      ExtensionLogger logger) {
+  private ContainerBuildPlan moveParentDepsToNewLayers(
+      ContainerBuildPlan buildPlan, MavenData mavenData, ExtensionLogger logger) {
 
     if (mavenData.getMavenProject().getParent() == null) {
       // Keep plan unchanged
+      logger.log(
+          LogLevel.LIFECYCLE,
+          "Skip moving parent dependencies to new layers, since project has no parent.");
       return buildPlan;
     }
     logger.log(LogLevel.LIFECYCLE, "Moving parent dependencies to new layers.");
 
-
     // the key is the expected path for the parent dependency
-    Map<String, Artifact> parentDependencies = getParentDependencies(mavenData).stream()
-        .map(d -> d.getArtifact())
-        //TODO: configurable?
-        .collect(Collectors.toMap(a -> "/app/libs/"+a.getArtifactId()+"-"+a.getVersion()+".jar", a -> a));
-    
-    // parent dependencies that have not been found in any layer (due to different version or filtering)
+    Map<String, Artifact> parentDependencies =
+        getParentDependencies(mavenData)
+            .stream()
+            .map(d -> d.getArtifact())
+            // TODO: configurable?
+            .collect(
+                Collectors.toMap(
+                    a -> "/app/libs/" + a.getArtifactId() + "-" + a.getVersion() + ".jar", a -> a));
+
+    // parent dependencies that have not been found in any layer (due to different version or
+    // filtering)
     Map<String, Artifact> parentDependenciesNotFound = new HashMap<>(parentDependencies);
-    
+
     List<FileEntriesLayer.Builder> newLayers = new ArrayList<>();
-    
 
     @SuppressWarnings("unchecked")
     List<FileEntriesLayer> originalLayers = ((List<FileEntriesLayer>) buildPlan.getLayers());
-    originalLayers.forEach(l -> {
-      // for each layer, create a parent layer
-      FileEntriesLayer.Builder toParentLayerBuilder = FileEntriesLayer.builder().setName(l.getName()+" parent");
-      newLayers.add(toParentLayerBuilder);
-      // ... and the normal layer
-      FileEntriesLayer.Builder toLayerBuilder = FileEntriesLayer.builder().setName(l.getName());
-      newLayers.add(toLayerBuilder);
-     
-      
-      l.getEntries().forEach(fe -> {
-        String path = fe.getExtractionPath().toString();
-        if(parentDependencies.containsKey(path)) {
-          // move to parent layer
-          toParentLayerBuilder.addEntry(fe);
-          // mark parent dep as found
-          parentDependenciesNotFound.remove(path);
-        } else {
-          //keep in original layer
-          toLayerBuilder.addEntry(fe);
-        }
-        
-      });
+    originalLayers.forEach(
+        l -> {
+          // for each layer, create a parent layer
+          String parentLayerName = l.getName() + "-parent";
+          FileEntriesLayer.Builder toParentLayerBuilder =
+              FileEntriesLayer.builder().setName(parentLayerName);
+          newLayers.add(toParentLayerBuilder);
+          // ... and the normal layer
+          FileEntriesLayer.Builder toLayerBuilder = FileEntriesLayer.builder().setName(l.getName());
+          newLayers.add(toLayerBuilder);
 
-    });
-    
-    parentDependenciesNotFound.forEach((path, artifact) -> {     
-      logger.log(LogLevel.ERROR, "Dependency from parent not found: "+artifact );
-    });
+          l.getEntries()
+              .forEach(
+                  fe -> {
+                    String path = fe.getExtractionPath().toString();
+                    if (parentDependencies.containsKey(path)) {
+                      // move to parent layer
+                      logger.log(LogLevel.INFO, "Moving " + path + " to " + parentLayerName + ".");
+                      toParentLayerBuilder.addEntry(fe);
+                      // mark parent dep as found
+                      parentDependenciesNotFound.remove(path);
+                    } else {
+                      // keep in original layer
+                      logger.log(LogLevel.INFO, "Keep " + path + " in " + l.getName() + ".");
+                      toLayerBuilder.addEntry(fe);
+                    }
+                  });
+        });
+
+    parentDependenciesNotFound.forEach(
+        (path, artifact) -> {
+          logger.log(LogLevel.ERROR, "Dependency from parent not found: " + artifact);
+        });
 
     return buildPlanWithNewLayers(buildPlan, newLayers);
   }
 
-  private ContainerBuildPlan buildPlanWithNewLayers(ContainerBuildPlan buildPlan, List<FileEntriesLayer.Builder> newLayers) {
+  private ContainerBuildPlan buildPlanWithNewLayers(
+      ContainerBuildPlan buildPlan, List<FileEntriesLayer.Builder> newLayers) {
     ContainerBuildPlan.Builder newPlanBuilder = buildPlan.toBuilder();
     newPlanBuilder.setLayers(Collections.emptyList());
-    
+
     // Add newly created non-empty to-layers (if any).
     newLayers
         .stream()
         .map(FileEntriesLayer.Builder::build)
         .filter(layer -> !layer.getEntries().isEmpty())
         .forEach(newPlanBuilder::addLayer);
-    
+
     return newPlanBuilder.build();
   }
 
   private List<Dependency> getParentDependencies(MavenData mavenData) {
     try {
-      
-      DefaultDependencyResolutionRequest request = new DefaultDependencyResolutionRequest(mavenData.getMavenProject().getParent(), mavenData.getMavenSession().getRepositorySession());
+
+      DefaultDependencyResolutionRequest request =
+          new DefaultDependencyResolutionRequest(
+              mavenData.getMavenProject().getParent(),
+              mavenData.getMavenSession().getRepositorySession());
       request.setResolutionFilter(new ScopeDependencyFilter("test"));
-      DependencyResolutionResult resolutionResult = dependencyResolver.resolve(request); 
-   
-      //TODO: Probably should use resolved dependencies, where snapshot versions are expanded!
+      DependencyResolutionResult resolutionResult = dependencyResolver.resolve(request);
+
       return resolutionResult.getDependencies();
     } catch (DependencyResolutionException e) {
       throw new RuntimeException("Error when getting parent dependencies: ", e);
