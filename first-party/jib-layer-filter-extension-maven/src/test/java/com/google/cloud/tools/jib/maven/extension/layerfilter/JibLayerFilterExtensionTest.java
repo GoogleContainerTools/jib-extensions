@@ -27,18 +27,28 @@ import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.LayerObject;
+import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionResult;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests for {@link JibLayerFilterExtension}. */
@@ -47,6 +57,21 @@ public class JibLayerFilterExtensionTest {
 
   @Mock private Configuration config;
   @Mock private ExtensionLogger logger;
+  @Mock private MavenData mavenData;
+  @Mock private MavenProject mavenProject;
+  @Mock private MavenProject mavenParentProject;
+  @Mock private MavenSession mavenSession;
+  @Mock private ProjectDependenciesResolver projectDependenciesResolver;
+  @Mock private DependencyResolutionResult dependencyResolutionResult;
+
+  @Before
+  public void initMocks() throws DependencyResolutionException {
+    when(mavenData.getMavenProject()).thenReturn(mavenProject);
+    when(mavenData.getMavenSession()).thenReturn(mavenSession);
+    when(mavenProject.getParent()).thenReturn(mavenParentProject);
+    when(projectDependenciesResolver.resolve(Mockito.any(DependencyResolutionRequest.class)))
+        .thenReturn(dependencyResolutionResult);
+  }
 
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
@@ -290,5 +315,65 @@ public class JibLayerFilterExtensionTest {
     assertEquals(
         Arrays.asList("/alpha/Bob", "/beta/Bob", "/gamma/Bob"), layerToExtractionPaths(newLayer5));
     assertEquals(Arrays.asList("/gamma/Charlie"), layerToExtractionPaths(newLayer6));
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_noProjectDependenciesResolver() {
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    Configuration cfg = new Configuration();
+    cfg.setCreateParentLayers(true);
+    try {
+      new JibLayerFilterExtension()
+          .extendContainerBuildPlan(buildPlan, null, Optional.of(cfg), mavenData, logger);
+      fail();
+    } catch (JibPluginExtensionException ex) {
+      assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
+      assertEquals(
+          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a more recent jib plugin version to fix this.",
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_noParent()
+      throws JibPluginExtensionException {
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    Configuration cfg = new Configuration();
+    cfg.setCreateParentLayers(true);
+
+    when(mavenProject.getParent()).thenReturn(null);
+
+    try {
+      JibLayerFilterExtension extension = new JibLayerFilterExtension();
+      extension.setDependencyResolver(projectDependenciesResolver);
+
+      extension.extendContainerBuildPlan(buildPlan, null, Optional.of(cfg), mavenData, logger);
+      fail();
+    } catch (JibPluginExtensionException ex) {
+      assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
+      assertEquals("Try to get parent dependencies, but project has no parent.", ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_noParentDependencies()
+      throws JibPluginExtensionException {
+    FileEntriesLayer layer1 = buildLayer("", Arrays.asList("/foo"));
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer1).build();
+    Configuration cfg = new Configuration();
+    cfg.setCreateParentLayers(true);
+
+    when(dependencyResolutionResult.getDependencies()).thenReturn(Collections.emptyList());
+
+    JibLayerFilterExtension extension = new JibLayerFilterExtension();
+    extension.setDependencyResolver(projectDependenciesResolver);
+
+    ContainerBuildPlan newPlan =
+        extension.extendContainerBuildPlan(buildPlan, null, Optional.of(cfg), mavenData, logger);
+
+    assertEquals(1, newPlan.getLayers().size());
+    FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
+    assertEquals("", newLayer1.getName());
+    assertEquals(layer1.getEntries(), newLayer1.getEntries());
   }
 }

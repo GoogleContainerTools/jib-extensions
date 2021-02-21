@@ -61,6 +61,11 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
   // (layer name, layer builder) map for new layers of configured <toLayer>
   @VisibleForTesting Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
 
+  @VisibleForTesting
+  void setDependencyResolver(ProjectDependenciesResolver dependencyResolver) {
+    this.dependencyResolver = dependencyResolver;
+  }
+
   @Override
   public Optional<Class<Configuration>> getExtraConfigType() {
     return Optional.of(Configuration.class);
@@ -128,15 +133,9 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
   }
 
   private ContainerBuildPlan moveParentDepsToNewLayers(
-      ContainerBuildPlan buildPlan, MavenData mavenData, ExtensionLogger logger) {
+      ContainerBuildPlan buildPlan, MavenData mavenData, ExtensionLogger logger)
+      throws JibPluginExtensionException {
 
-    if (mavenData.getMavenProject().getParent() == null) {
-      // Keep plan unchanged
-      logger.log(
-          LogLevel.LIFECYCLE,
-          "Skip moving parent dependencies to new layers, since project has no parent.");
-      return buildPlan;
-    }
     logger.log(LogLevel.LIFECYCLE, "Moving parent dependencies to new layers.");
 
     // the key is the expected path for the parent dependency
@@ -209,7 +208,17 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     return newPlanBuilder.build();
   }
 
-  private List<Dependency> getParentDependencies(MavenData mavenData) {
+  private List<Dependency> getParentDependencies(MavenData mavenData)
+      throws JibPluginExtensionException {
+    if (mavenData.getMavenProject().getParent() == null) {
+      throw new JibPluginExtensionException(
+          getClass(), "Try to get parent dependencies, but project has no parent.");
+    }
+    if (dependencyResolver == null) {
+      throw new JibPluginExtensionException(
+          getClass(),
+          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a more recent jib plugin version to fix this.");
+    }
     try {
 
       DefaultDependencyResolutionRequest request =
@@ -221,7 +230,8 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
       return resolutionResult.getDependencies();
     } catch (DependencyResolutionException e) {
-      throw new RuntimeException("Error when getting parent dependencies: ", e);
+      throw new JibPluginExtensionException(
+          getClass(), "Error when getting parent dependencies: ", e);
     }
   }
 
