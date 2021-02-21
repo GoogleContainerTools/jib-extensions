@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.jib.maven.extension.layerfilter;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -390,8 +391,13 @@ public class JibLayerFilterExtensionTest {
   public void testExtendContainerBuildPlan_createParentLayers_withParentDependencies()
       throws JibPluginExtensionException {
     FileEntriesLayer layer1 =
-        buildLayer("layer1", Arrays.asList("/app/libs/foo-1.0.0.jar", "/app/libs/bar-2.0.0.jar", "/app/libs/wrong-version-2.0.0.jar"));
-    FileEntriesLayer layer2 = buildLayer("layer2", Arrays.asList("/app/libs/blah-3.0.0.jar"));
+        buildLayer(
+            "layer1",
+            asList(
+                "/app/libs/foo-1.0.0.jar",
+                "/app/libs/bar-2.0.0.jar",
+                "/app/libs/wrong-version-2.0.0.jar"));
+    FileEntriesLayer layer2 = buildLayer("layer2", asList("/app/libs/blah-3.0.0.jar"));
 
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
@@ -404,7 +410,7 @@ public class JibLayerFilterExtensionTest {
     Dependency wrongVersionDependency = mockDependency("wrong-version", "1.0.0");
 
     when(dependencyResolutionResult.getDependencies())
-        .thenReturn(Arrays.asList(fooDependency, blahDependency, wrongVersionDependency));
+        .thenReturn(asList(fooDependency, blahDependency, wrongVersionDependency));
 
     JibLayerFilterExtension extension = new JibLayerFilterExtension();
     extension.setDependencyResolver(projectDependenciesResolver);
@@ -415,10 +421,11 @@ public class JibLayerFilterExtensionTest {
     assertEquals(3, newPlan.getLayers().size());
 
     List<FileEntriesLayer> expectedNewLayers =
-        Arrays.asList(
-            buildLayer("layer1-parent", Arrays.asList("/app/libs/foo-1.0.0.jar")),
-            buildLayer("layer1", Arrays.asList("/app/libs/bar-2.0.0.jar", "/app/libs/wrong-version-2.0.0.jar")),
-            buildLayer("layer2-parent", Arrays.asList("/app/libs/blah-3.0.0.jar")));
+        asList(
+            buildLayer("layer1-parent", asList("/app/libs/foo-1.0.0.jar")),
+            buildLayer(
+                "layer1", asList("/app/libs/bar-2.0.0.jar", "/app/libs/wrong-version-2.0.0.jar")),
+            buildLayer("layer2-parent", asList("/app/libs/blah-3.0.0.jar")));
 
     for (int i = 0; i < expectedNewLayers.size(); i++) {
       assertEquals(expectedNewLayers.get(i).getName(), newPlan.getLayers().get(i).getName());
@@ -426,7 +433,8 @@ public class JibLayerFilterExtensionTest {
           expectedNewLayers.get(i).getEntries(),
           ((FileEntriesLayer) newPlan.getLayers().get(i)).getEntries());
     }
-    
-    verify(logger).log(LogLevel.ERROR, "Dependency from parent not found: /app/libs/wrong-version-1.0.0.jar");
+
+    verify(logger)
+        .log(LogLevel.ERROR, "Dependency from parent not found: /app/libs/wrong-version-1.0.0.jar");
   }
 }
