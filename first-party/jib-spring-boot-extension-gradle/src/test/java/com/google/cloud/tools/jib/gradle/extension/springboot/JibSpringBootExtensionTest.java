@@ -45,7 +45,6 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.internal.file.AbstractFileCollection;
 import org.gradle.api.tasks.TaskContainer;
-import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.TaskProvider;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,11 +67,6 @@ public class JibSpringBootExtensionTest {
     @Override
     public Set<File> getFiles() {
       return files;
-    }
-
-    @Override
-    public TaskDependency getBuildDependencies() {
-      return null;
     }
 
     @Override
