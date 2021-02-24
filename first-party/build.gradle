@@ -25,6 +25,12 @@ subprojects {
     mavenCentral()
   }
 
+  // `java-library` must be applied before `java`. `java-gradle-plugin` in
+  // Gradle sub-projects auto applies `java-library`, so ensure `java-library`
+  // is applied first.
+  if (project.name.endsWith('-gradle')) {
+    apply plugin: 'java-library'
+  }
   apply plugin: 'java'
   apply plugin: 'checkstyle'
   apply plugin: 'com.github.sherter.google-java-format'
