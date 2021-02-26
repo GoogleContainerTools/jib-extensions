@@ -120,11 +120,9 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     ContainerBuildPlan newPlan = newPlanBuilder.build();
 
-    if (config.get().isCreateParentLayers()) {
-      newPlan = moveParentDepsToNewLayers(newPlan, mavenData, logger);
-    }
-
-    return newPlan;
+    return config.get().isCreateParentDependencyLayers()
+        ? moveParentDepsToNewLayers(newPlan, mavenData, logger)
+        : newPlan;
   }
 
   private ContainerBuildPlan moveParentDepsToNewLayers(
@@ -140,7 +138,6 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
             .map(Dependency::getArtifact)
             // TODO: configurable?
             .collect(
-                // TODO: getVersion or getBaseVersion? check in jib, which version it is...
                 Collectors.toMap(
                     artifact ->
                         "/app/libs/"
@@ -154,37 +151,38 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     // filtering)
     Map<String, Artifact> parentDependenciesNotFound = new HashMap<>(parentDependencies);
 
-    List<FileEntriesLayer.Builder> newLayers = new ArrayList<>();
+    List<FileEntriesLayer.Builder> newLayerBuilders = new ArrayList<>();
 
     @SuppressWarnings("unchecked")
     List<FileEntriesLayer> originalLayers = ((List<FileEntriesLayer>) buildPlan.getLayers());
     originalLayers.forEach(
-        layer -> {
+        originalLayer -> {
           // for each layer, create a parent layer
-          String parentLayerName = layer.getName() + "-parent";
-          FileEntriesLayer.Builder toParentLayerBuilder =
+          String parentLayerName = originalLayer.getName() + "-parent";
+          FileEntriesLayer.Builder parentLayerBuilder =
               FileEntriesLayer.builder().setName(parentLayerName);
-          newLayers.add(toParentLayerBuilder);
+          newLayerBuilders.add(parentLayerBuilder);
           // ... and the normal layer
-          FileEntriesLayer.Builder toLayerBuilder =
-              FileEntriesLayer.builder().setName(layer.getName());
-          newLayers.add(toLayerBuilder);
+          FileEntriesLayer.Builder layerBuilder =
+              FileEntriesLayer.builder().setName(originalLayer.getName());
+          newLayerBuilders.add(layerBuilder);
 
-          layer
+          originalLayer
               .getEntries()
               .forEach(
-                  fe -> {
-                    String path = fe.getExtractionPath().toString();
+                  entry -> {
+                    String path = entry.getExtractionPath().toString();
                     if (parentDependencies.containsKey(path)) {
                       // move to parent layer
-                      logger.log(LogLevel.INFO, "Moving " + path + " to " + parentLayerName + ".");
-                      toParentLayerBuilder.addEntry(fe);
+                      logger.log(LogLevel.DEBUG, "Moving " + path + " to " + parentLayerName + ".");
+                      parentLayerBuilder.addEntry(entry);
                       // mark parent dep as found
                       parentDependenciesNotFound.remove(path);
                     } else {
                       // keep in original layer
-                      logger.log(LogLevel.INFO, "Keep " + path + " in " + layer.getName() + ".");
-                      toLayerBuilder.addEntry(fe);
+                      logger.log(
+                          LogLevel.DEBUG, "Keep " + path + " in " + originalLayer.getName() + ".");
+                      layerBuilder.addEntry(entry);
                     }
                   });
         });
@@ -194,22 +192,13 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
           logger.log(LogLevel.INFO, "Dependency from parent not found: " + path);
         });
 
-    return buildPlanWithNewLayers(buildPlan, newLayers);
-  }
-
-  private ContainerBuildPlan buildPlanWithNewLayers(
-      ContainerBuildPlan buildPlan, List<FileEntriesLayer.Builder> newLayers) {
-    ContainerBuildPlan.Builder newPlanBuilder = buildPlan.toBuilder();
-    newPlanBuilder.setLayers(Collections.emptyList());
-
-    // Add newly created non-empty to-layers (if any).
-    newLayers
-        .stream()
-        .map(FileEntriesLayer.Builder::build)
-        .filter(layer -> !layer.getEntries().isEmpty())
-        .forEach(newPlanBuilder::addLayer);
-
-    return newPlanBuilder.build();
+    List<FileEntriesLayer> newLayers =
+        newLayerBuilders
+            .stream()
+            .map(FileEntriesLayer.Builder::build)
+            .filter(layer -> !layer.getEntries().isEmpty())
+            .collect(Collectors.toList());
+    return buildPlan.toBuilder().setLayers(newLayers).build();
   }
 
   private List<Dependency> getParentDependencies(MavenData mavenData)
@@ -233,9 +222,9 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       DependencyResolutionResult resolutionResult = dependencyResolver.resolve(request);
 
       return resolutionResult.getDependencies();
-    } catch (DependencyResolutionException e) {
+    } catch (DependencyResolutionException ex) {
       throw new JibPluginExtensionException(
-          getClass(), "Error when getting parent dependencies: ", e);
+          getClass(), "Error when getting parent dependencies: ", ex);
     }
   }
 

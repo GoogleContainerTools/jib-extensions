@@ -36,7 +36,7 @@ import java.util.List;
  *       <toLayer>in-house dependencies</toLayer>
  *     </filter>
  *   </filters>
- *   <createParentLayers>true</createParentLayers>
+ *   <createParentDependencyLayers>true</createParentDependencyLayers>
  * </configuration>
  * }</pre>
  */
@@ -62,17 +62,13 @@ public class Configuration {
    * layers are created after the filters have been applied. For every original layer and every
    * layer defined by the filters, a parent layer will be created (if not empty).
    */
-  private boolean createParentLayers;
+  private boolean createParentDependencyLayers;
 
   public List<Filter> getFilters() {
     return filters;
   }
 
-  public boolean isCreateParentLayers() {
-    return createParentLayers;
-  }
-
-  public void setCreateParentLayers(boolean parentLayers) {
-    this.createParentLayers = parentLayers;
+  public boolean isCreateParentDependencyLayers() {
+    return createParentDependencyLayers;
   }
 }
