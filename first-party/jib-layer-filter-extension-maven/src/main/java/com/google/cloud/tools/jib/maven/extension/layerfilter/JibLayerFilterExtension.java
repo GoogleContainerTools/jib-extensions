@@ -166,18 +166,19 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
               .getEntries()
               .forEach(
                   entry -> {
-                    String[] path = entry.getExtractionPath().toString().split("/");
-                    String fileName = path[path.length - 1];
+                    String fileName = entry.getSourceFile().getFileName().toString();
                     if (parentDependencies.containsKey(fileName)) {
                       // move to parent layer
-                      logger.log(LogLevel.DEBUG, "Moving " + path + " to " + parentLayerName + ".");
+                      logger.log(
+                          LogLevel.DEBUG, "Moving " + fileName + " to " + parentLayerName + ".");
                       parentLayerBuilder.addEntry(entry);
                       // mark parent dep as found
                       parentDependenciesNotFound.remove(fileName);
                     } else {
                       // keep in original layer
                       logger.log(
-                          LogLevel.DEBUG, "Keep " + path + " in " + originalLayer.getName() + ".");
+                          LogLevel.DEBUG,
+                          "Keep " + fileName + " in " + originalLayer.getName() + ".");
                       layerBuilder.addEntry(entry);
                     }
                   });
@@ -186,6 +187,18 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     parentDependenciesNotFound.forEach(
         (fileName, artifact) -> {
           logger.log(LogLevel.INFO, "Dependency from parent not found: " + fileName);
+          String potentialMatches =
+              originalLayers
+                  .stream()
+                  .flatMap(layer -> layer.getEntries().stream())
+                  .map(entry -> entry.getSourceFile().getFileName().toString())
+                  .filter(
+                      filename ->
+                          filename.endsWith(".jar") && filename.contains(artifact.getArtifactId()))
+                  .collect(Collectors.joining());
+          if (!potentialMatches.isEmpty()) {
+            logger.log(LogLevel.INFO, "Potential matches: " + potentialMatches);
+          }
         });
 
     List<FileEntriesLayer> newLayers =

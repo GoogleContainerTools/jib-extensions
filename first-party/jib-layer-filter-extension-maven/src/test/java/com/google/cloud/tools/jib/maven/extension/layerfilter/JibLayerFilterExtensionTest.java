@@ -80,7 +80,9 @@ public class JibLayerFilterExtensionTest {
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
     for (String path : filePaths) {
-      builder.addEntry(Paths.get("whatever"), AbsoluteUnixPath.get(path));
+      String[] pathComponents = path.split("/");
+      String fileName = pathComponents[pathComponents.length - 1];
+      builder.addEntry(Paths.get("whatever/" + fileName), AbsoluteUnixPath.get(path));
     }
     return builder.build();
   }
@@ -408,10 +410,16 @@ public class JibLayerFilterExtensionTest {
     // If the version does not match, the dependency must not be moved to parent layer
     Dependency nonMatchingParentDependency =
         mockDependency("parent-lib-different-version", "1.0.0");
+    // A parent dependency that has been filtered before
+    Dependency filteredParentDependency = mockDependency("parent-lib-filtered", "1.0.0");
 
     when(dependencyResolutionResult.getDependencies())
         .thenReturn(
-            Arrays.asList(parentDependency1, parentDependency2, nonMatchingParentDependency));
+            Arrays.asList(
+                parentDependency1,
+                parentDependency2,
+                nonMatchingParentDependency,
+                filteredParentDependency));
 
     JibLayerFilterExtension extension = new JibLayerFilterExtension();
     extension.dependencyResolver = projectDependenciesResolver;
@@ -442,5 +450,8 @@ public class JibLayerFilterExtensionTest {
         .log(
             LogLevel.INFO,
             "Dependency from parent not found: parent-lib-different-version-1.0.0.jar");
+    verify(logger).log(LogLevel.INFO, "Potential matches: parent-lib-different-version-2.0.0.jar");
+    verify(logger)
+        .log(LogLevel.INFO, "Dependency from parent not found: parent-lib-filtered-1.0.0.jar");
   }
 }
