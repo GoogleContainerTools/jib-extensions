@@ -56,15 +56,10 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
   private Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
 
-  @Inject private ProjectDependenciesResolver dependencyResolver;
+  @VisibleForTesting @Inject ProjectDependenciesResolver dependencyResolver;
 
   // (layer name, layer builder) map for new layers of configured <toLayer>
   @VisibleForTesting Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
-
-  @VisibleForTesting
-  void setDependencyResolver(ProjectDependenciesResolver dependencyResolver) {
-    this.dependencyResolver = dependencyResolver;
-  }
 
   @Override
   public Optional<Class<Configuration>> getExtraConfigType() {
@@ -136,18 +131,24 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       ContainerBuildPlan buildPlan, MavenData mavenData, ExtensionLogger logger)
       throws JibPluginExtensionException {
 
-    logger.log(LogLevel.LIFECYCLE, "Moving parent dependencies to new layers.");
+    logger.log(LogLevel.INFO, "Moving parent dependencies to new layers.");
 
     // the key is the expected path for the parent dependency
     Map<String, Artifact> parentDependencies =
         getParentDependencies(mavenData)
             .stream()
-            .map(d -> d.getArtifact())
+            .map(Dependency::getArtifact)
             // TODO: configurable?
             .collect(
                 // TODO: getVersion or getBaseVersion? check in jib, which version it is...
                 Collectors.toMap(
-                    a -> "/app/libs/" + a.getArtifactId() + "-" + a.getVersion() + ".jar", a -> a));
+                    artifact ->
+                        "/app/libs/"
+                            + artifact.getArtifactId()
+                            + "-"
+                            + artifact.getVersion()
+                            + ".jar",
+                    artifact -> artifact));
 
     // parent dependencies that have not been found in any layer (due to different version or
     // filtering)
@@ -158,17 +159,19 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     @SuppressWarnings("unchecked")
     List<FileEntriesLayer> originalLayers = ((List<FileEntriesLayer>) buildPlan.getLayers());
     originalLayers.forEach(
-        l -> {
+        layer -> {
           // for each layer, create a parent layer
-          String parentLayerName = l.getName() + "-parent";
+          String parentLayerName = layer.getName() + "-parent";
           FileEntriesLayer.Builder toParentLayerBuilder =
               FileEntriesLayer.builder().setName(parentLayerName);
           newLayers.add(toParentLayerBuilder);
           // ... and the normal layer
-          FileEntriesLayer.Builder toLayerBuilder = FileEntriesLayer.builder().setName(l.getName());
+          FileEntriesLayer.Builder toLayerBuilder =
+              FileEntriesLayer.builder().setName(layer.getName());
           newLayers.add(toLayerBuilder);
 
-          l.getEntries()
+          layer
+              .getEntries()
               .forEach(
                   fe -> {
                     String path = fe.getExtractionPath().toString();
@@ -180,7 +183,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
                       parentDependenciesNotFound.remove(path);
                     } else {
                       // keep in original layer
-                      logger.log(LogLevel.INFO, "Keep " + path + " in " + l.getName() + ".");
+                      logger.log(LogLevel.INFO, "Keep " + path + " in " + layer.getName() + ".");
                       toLayerBuilder.addEntry(fe);
                     }
                   });
@@ -188,7 +191,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     parentDependenciesNotFound.forEach(
         (path, artifact) -> {
-          logger.log(LogLevel.ERROR, "Dependency from parent not found: " + path);
+          logger.log(LogLevel.INFO, "Dependency from parent not found: " + path);
         });
 
     return buildPlanWithNewLayers(buildPlan, newLayers);
