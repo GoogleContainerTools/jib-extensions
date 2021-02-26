@@ -103,7 +103,7 @@ public class JibLayerFilterExtensionTest {
   private static Dependency mockDependency(String artifactId, String version) {
     Artifact artifact = mock(Artifact.class);
     when(artifact.getArtifactId()).thenReturn(artifactId);
-    when(artifact.getVersion()).thenReturn(version);
+    when(artifact.getBaseVersion()).thenReturn(version);
     return new Dependency(artifact, null);
   }
 

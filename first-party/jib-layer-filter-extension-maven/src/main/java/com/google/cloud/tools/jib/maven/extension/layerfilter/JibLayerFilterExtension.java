@@ -143,7 +143,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
                         "/app/libs/"
                             + artifact.getArtifactId()
                             + "-"
-                            + artifact.getVersion()
+                            + artifact.getBaseVersion()
                             + ".jar",
                     artifact -> artifact));
 
