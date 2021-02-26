@@ -441,6 +441,6 @@ public class JibLayerFilterExtensionTest {
     verify(logger)
         .log(
             LogLevel.INFO,
-            "Dependency from parent not found: /app/libs/parent-lib-different-version-1.0.0.jar");
+            "Dependency from parent not found: parent-lib-different-version-1.0.0.jar");
   }
 }

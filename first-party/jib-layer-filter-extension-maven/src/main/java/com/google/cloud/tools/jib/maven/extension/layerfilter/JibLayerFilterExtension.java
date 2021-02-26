@@ -131,7 +131,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     logger.log(LogLevel.INFO, "Moving parent dependencies to new layers.");
 
-    // the key is the expected path for the parent dependency
+    // the key is the expected filename for the parent dependency
     Map<String, Artifact> parentDependencies =
         getParentDependencies(mavenData)
             .stream()
@@ -139,12 +139,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
             // TODO: configurable?
             .collect(
                 Collectors.toMap(
-                    artifact ->
-                        "/app/libs/"
-                            + artifact.getArtifactId()
-                            + "-"
-                            + artifact.getBaseVersion()
-                            + ".jar",
+                    artifact -> artifact.getArtifactId() + "-" + artifact.getBaseVersion() + ".jar",
                     artifact -> artifact));
 
     // parent dependencies that have not been found in any layer (due to different version or
@@ -171,13 +166,14 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
               .getEntries()
               .forEach(
                   entry -> {
-                    String path = entry.getExtractionPath().toString();
-                    if (parentDependencies.containsKey(path)) {
+                    String[] path = entry.getExtractionPath().toString().split("/");
+                    String fileName = path[path.length - 1];
+                    if (parentDependencies.containsKey(fileName)) {
                       // move to parent layer
                       logger.log(LogLevel.DEBUG, "Moving " + path + " to " + parentLayerName + ".");
                       parentLayerBuilder.addEntry(entry);
                       // mark parent dep as found
-                      parentDependenciesNotFound.remove(path);
+                      parentDependenciesNotFound.remove(fileName);
                     } else {
                       // keep in original layer
                       logger.log(
@@ -188,8 +184,8 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
         });
 
     parentDependenciesNotFound.forEach(
-        (path, artifact) -> {
-          logger.log(LogLevel.INFO, "Dependency from parent not found: " + path);
+        (fileName, artifact) -> {
+          logger.log(LogLevel.INFO, "Dependency from parent not found: " + fileName);
         });
 
     List<FileEntriesLayer> newLayers =
