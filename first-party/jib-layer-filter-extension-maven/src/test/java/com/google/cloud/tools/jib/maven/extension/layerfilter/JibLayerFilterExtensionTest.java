@@ -32,6 +32,7 @@ import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,9 +81,17 @@ public class JibLayerFilterExtensionTest {
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
     for (String path : filePaths) {
-      String[] pathComponents = path.split("/");
-      String fileName = pathComponents[pathComponents.length - 1];
-      builder.addEntry(Paths.get("whatever/" + fileName), AbsoluteUnixPath.get(path));
+      builder.addEntry(Paths.get("whatever"), AbsoluteUnixPath.get(path));
+    }
+    return builder.build();
+  }
+
+  private static FileEntriesLayer buildLayer(
+      String layerName, List<String> sourcePaths, List<String> inContainerPaths) {
+    FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
+    for (int i = 0; i < sourcePaths.size(); i++) {
+      builder.addEntry(
+          Paths.get(sourcePaths.get(i)), AbsoluteUnixPath.get(inContainerPaths.get(i)));
     }
     return builder.build();
   }
@@ -102,10 +111,12 @@ public class JibLayerFilterExtensionTest {
     return filter;
   }
 
-  private static Dependency mockDependency(String artifactId, String version) {
+  private static Dependency mockDependency(String sourcePath, String artifactId) {
+    File file = mock(File.class);
+    when(file.toPath()).thenReturn(Paths.get(sourcePath));
     Artifact artifact = mock(Artifact.class);
     when(artifact.getArtifactId()).thenReturn(artifactId);
-    when(artifact.getBaseVersion()).thenReturn(version);
+    when(artifact.getFile()).thenReturn(file);
     return new Dependency(artifact, null);
   }
 
@@ -394,24 +405,37 @@ public class JibLayerFilterExtensionTest {
         buildLayer(
             "layer1",
             Arrays.asList(
-                "/app/libs/parent-lib1-1.0.0.jar",
-                "/app/libs/direct-lib-2.0.0.jar",
-                "/app/libs/parent-lib-different-version-2.0.0.jar"));
+                "parentlib1path",
+                "directlibpath",
+                // The extension makes no assumptions about the filenames' structure.
+                // Only if a dependency could not be found, it needs the suffix .jar
+                // and the artifact id within the filename to find and log potential matches
+                "parent-lib-different-version-2.0.0-whatever.jar"),
+            Arrays.asList(
+                "/whatever/parent-lib1-1.0.0.jar",
+                "/whatever/direct-lib-2.0.0.jar",
+                "/whatever/parent-lib-different-version-2.0.0.jar"));
     FileEntriesLayer layer2 =
-        buildLayer("layer2", Arrays.asList("/app/libs/parent-lib2-3.0.0.jar"));
+        buildLayer(
+            "layer2",
+            Arrays.asList("parentlib2path"),
+            Arrays.asList("/whatever/parent-lib2-3.0.0.jar"));
 
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
 
     when(config.isCreateParentDependencyLayers()).thenReturn(true);
 
-    Dependency parentDependency1 = mockDependency("parent-lib1", "1.0.0");
-    Dependency parentDependency2 = mockDependency("parent-lib2", "3.0.0");
-    // If the version does not match, the dependency must not be moved to parent layer
+    Dependency parentDependency1 = mockDependency("parentlib1path", "parent-lib1");
+    Dependency parentDependency2 = mockDependency("parentlib2path", "parent-lib2");
+    // If the resolved file path for the dependency does not match, the dependency must not be moved
+    // to parent layer
     Dependency nonMatchingParentDependency =
-        mockDependency("parent-lib-different-version", "1.0.0");
-    // A parent dependency that has been filtered before
-    Dependency filteredParentDependency = mockDependency("parent-lib-filtered", "1.0.0");
+        mockDependency(
+            "parent-lib-different-version-1.0.0-whatever.jar", "parent-lib-different-version");
+    // A parent dependency that has been filtered before and so does not exist in any layer
+    Dependency filteredParentDependency =
+        mockDependency("parentlibfilteredpath", "parent-lib-filtered");
 
     when(dependencyResolutionResult.getDependencies())
         .thenReturn(
@@ -431,17 +455,25 @@ public class JibLayerFilterExtensionTest {
 
     List<FileEntriesLayer> expectedNewLayers =
         Arrays.asList(
-            buildLayer("layer1-parent", Arrays.asList("/app/libs/parent-lib1-1.0.0.jar")),
+            buildLayer(
+                "layer1-parent",
+                Arrays.asList("parentlib1path"),
+                Arrays.asList("/whatever/parent-lib1-1.0.0.jar")),
             buildLayer(
                 "layer1",
+                Arrays.asList("directlibpath", "parent-lib-different-version-2.0.0-whatever.jar"),
                 Arrays.asList(
-                    "/app/libs/direct-lib-2.0.0.jar",
-                    "/app/libs/parent-lib-different-version-2.0.0.jar")),
-            buildLayer("layer2-parent", Arrays.asList("/app/libs/parent-lib2-3.0.0.jar")));
+                    "/whatever/direct-lib-2.0.0.jar",
+                    "/whatever/parent-lib-different-version-2.0.0.jar")),
+            buildLayer(
+                "layer2-parent",
+                Arrays.asList("parentlib2path"),
+                Arrays.asList("/whatever/parent-lib2-3.0.0.jar")));
 
     for (int i = 0; i < expectedNewLayers.size(); i++) {
       assertEquals(expectedNewLayers.get(i).getName(), newPlan.getLayers().get(i).getName());
       assertEquals(
+          expectedNewLayers.get(i).getName(),
           expectedNewLayers.get(i).getEntries(),
           ((FileEntriesLayer) newPlan.getLayers().get(i)).getEntries());
     }
@@ -449,9 +481,9 @@ public class JibLayerFilterExtensionTest {
     verify(logger)
         .log(
             LogLevel.INFO,
-            "Dependency from parent not found: parent-lib-different-version-1.0.0.jar");
-    verify(logger).log(LogLevel.INFO, "Potential matches: parent-lib-different-version-2.0.0.jar");
+            "Dependency from parent not found: parent-lib-different-version-1.0.0-whatever.jar");
     verify(logger)
-        .log(LogLevel.INFO, "Dependency from parent not found: parent-lib-filtered-1.0.0.jar");
+        .log(LogLevel.INFO, "Potential matches: parent-lib-different-version-2.0.0-whatever.jar");
+    verify(logger).log(LogLevel.INFO, "Dependency from parent not found: parentlibfilteredpath");
   }
 }

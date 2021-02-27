@@ -131,20 +131,19 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     logger.log(LogLevel.INFO, "Moving parent dependencies to new layers.");
 
-    // the key is the expected filename for the parent dependency
-    Map<String, Artifact> parentDependencies =
+    // The key is the source file path for the parent dependency.
+    // We only consider artifacts that have been resolved.
+    Map<Path, Artifact> parentDependencies =
         getParentDependencies(mavenData)
             .stream()
             .map(Dependency::getArtifact)
-            // TODO: configurable?
+            .filter(artifact -> artifact.getFile() != null)
             .collect(
-                Collectors.toMap(
-                    artifact -> artifact.getArtifactId() + "-" + artifact.getBaseVersion() + ".jar",
-                    artifact -> artifact));
+                Collectors.toMap(artifact -> artifact.getFile().toPath(), artifact -> artifact));
 
     // parent dependencies that have not been found in any layer (due to different version or
     // filtering)
-    Map<String, Artifact> parentDependenciesNotFound = new HashMap<>(parentDependencies);
+    Map<Path, Artifact> parentDependenciesNotFound = new HashMap<>(parentDependencies);
 
     List<FileEntriesLayer.Builder> newLayerBuilders = new ArrayList<>();
 
@@ -166,35 +165,39 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
               .getEntries()
               .forEach(
                   entry -> {
-                    String fileName = entry.getSourceFile().getFileName().toString();
-                    if (parentDependencies.containsKey(fileName)) {
+                    Path sourceFilePath = entry.getSourceFile();
+                    if (parentDependencies.containsKey(sourceFilePath)) {
                       // move to parent layer
                       logger.log(
-                          LogLevel.DEBUG, "Moving " + fileName + " to " + parentLayerName + ".");
+                          LogLevel.DEBUG,
+                          "Moving " + sourceFilePath + " to " + parentLayerName + ".");
                       parentLayerBuilder.addEntry(entry);
                       // mark parent dep as found
-                      parentDependenciesNotFound.remove(fileName);
+                      parentDependenciesNotFound.remove(sourceFilePath);
                     } else {
                       // keep in original layer
                       logger.log(
                           LogLevel.DEBUG,
-                          "Keep " + fileName + " in " + originalLayer.getName() + ".");
+                          "Keep " + sourceFilePath + " in " + originalLayer.getName() + ".");
                       layerBuilder.addEntry(entry);
                     }
                   });
         });
 
     parentDependenciesNotFound.forEach(
-        (fileName, artifact) -> {
-          logger.log(LogLevel.INFO, "Dependency from parent not found: " + fileName);
+        (filePath, artifact) -> {
+          logger.log(LogLevel.INFO, "Dependency from parent not found: " + filePath);
           String potentialMatches =
               originalLayers
                   .stream()
                   .flatMap(layer -> layer.getEntries().stream())
-                  .map(entry -> entry.getSourceFile().getFileName().toString())
+                  .map(entry -> entry.getSourceFile())
                   .filter(
-                      filename ->
-                          filename.endsWith(".jar") && filename.contains(artifact.getArtifactId()))
+                      file -> {
+                        String string = file.getFileName().toString();
+                        return string.endsWith(".jar") && string.contains(artifact.getArtifactId());
+                      })
+                  .map(file -> file.toString())
                   .collect(Collectors.joining());
           if (!potentialMatches.isEmpty()) {
             logger.log(LogLevel.INFO, "Potential matches: " + potentialMatches);
