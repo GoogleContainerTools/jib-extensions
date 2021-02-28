@@ -27,6 +27,9 @@ Note that `<container><mainClass>` should be set to some placeholder value to su
   </dependencies>
 
   <configuration>
+    <!-- set this if you either have quarkus.package.type=fast-jar  -->
+    <!-- or running quarkus version 1.12.0.CR1 or higer (it's default there) -->
+    <fastJarEnabled>true</fastJarEnabled>
     <container>
       <!-- to suppress Jib warning about missing main class -->
       <mainClass>bogus</mainClass>
@@ -63,3 +66,5 @@ Additionally, overriding the following configurations using Maven and Java syste
 
 - `<container><appRoot>`
 - `<container><jvmFlags>`
+
+Set the `fastJarEnabled` property to true if you like to build your image with fast jar.

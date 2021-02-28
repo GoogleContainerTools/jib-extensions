@@ -22,6 +22,9 @@ import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension;
 import com.google.cloud.tools.jib.maven.extension.MavenData;
+import com.google.cloud.tools.jib.maven.extension.quarkus.resolvers.DependencyDto;
+import com.google.cloud.tools.jib.maven.extension.quarkus.resolvers.JarDependencyResolver;
+import com.google.cloud.tools.jib.maven.extension.quarkus.resolvers.JarDependencyResolverFactory;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
@@ -53,6 +56,8 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
 
   private AbsoluteUnixPath appRoot = AbsoluteUnixPath.get("/app");
   private List<String> jvmFlags = Collections.emptyList();
+  private Boolean fastJarEnabled = false;
+  private Path outputDirectory = Paths.get("/");
 
   @Override
   public Optional<Class<Void>> getExtraConfigType() {
@@ -72,34 +77,27 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
       readJibConfigurations(mavenData.getMavenProject());
 
       Build build = mavenData.getMavenProject().getBuild();
-      Path outputDirectory = Paths.get(build.getDirectory());
-      Path jar = outputDirectory.resolve(build.getFinalName() + "-runner.jar");
-
-      if (!Files.isRegularFile(jar)) {
-        throw new JibPluginExtensionException(
-            getClass(),
-            jar
-                + " doesn't exist; did you run the Qaurkus Maven plugin "
-                + "('compile' and 'quarkus:build' Maven goals)?");
-      }
+      outputDirectory = Paths.get(build.getDirectory());
+      JarDependencyResolver resolver = JarDependencyResolverFactory.createResolver(fastJarEnabled);
+      Path jar = resolver.verifyJarPresent(outputDirectory, build.getFinalName());
 
       ContainerBuildPlan.Builder planBuilder = buildPlan.toBuilder();
       planBuilder.setLayers(Collections.emptyList());
+      AbsoluteUnixPath appRootJar = resolver.getAppRootJar(appRoot);
+      List<DependencyDto> dependencyDtoList = resolver.getDependencyLayers(outputDirectory);
 
-      // dependency layers
-      addDependencyLayers(mavenData.getMavenSession(), planBuilder, outputDirectory.resolve("lib"));
+      for (DependencyDto dto : dependencyDtoList) {
+        addDependencyLayers(
+            mavenData.getMavenSession(), planBuilder, dto.getPath(), dto.getLayerPrefix());
+      }
 
-      // Quarkus runner JAR layer
-      AbsoluteUnixPath appRootJar = appRoot.resolve("app.jar");
       FileEntriesLayer jarLayer =
           FileEntriesLayer.builder().setName("quarkus jar").addEntry(jar, appRootJar).build();
       planBuilder.addLayer(jarLayer);
 
       // Preserve extra directories layers.
       String extraFilesLayerName = JavaContainerBuilder.LayerType.EXTRA_FILES.getName();
-      buildPlan
-          .getLayers()
-          .stream()
+      buildPlan.getLayers().stream()
           .filter(layer -> layer.getName().startsWith(extraFilesLayerName))
           .forEach(planBuilder::addLayer);
 
@@ -119,13 +117,14 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
   }
 
   private void addDependencyLayers(
-      MavenSession session, ContainerBuildPlan.Builder planBuilder, Path libDirectory)
+      MavenSession session,
+      ContainerBuildPlan.Builder planBuilder,
+      Path libDirectory,
+      Optional<String> layerPrefixMaybe)
       throws IOException {
     // Collect all artifact files involved in this Maven session.
     Set<String> projectArtifactFilenames =
-        session
-            .getProjects()
-            .stream()
+        session.getProjects().stream()
             .map(MavenProject::getArtifact)
             .map(Artifact::getFile)
             .filter(Objects::nonNull) // excludes root POM project
@@ -134,18 +133,19 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
 
     Predicate<Path> isProjectDependency =
         path ->
-            projectArtifactFilenames
-                .stream()
+            projectArtifactFilenames.stream()
                 // endsWith: Quarkus prepends group ID to the augmented JARs in target/lib.
                 .anyMatch(jarFilename -> path.getFileName().toString().endsWith(jarFilename));
     Predicate<Path> isSnapshot =
         path ->
             path.getFileName().toString().contains("SNAPSHOT") && !isProjectDependency.test(path);
     Predicate<Path> isThirdParty = isProjectDependency.negate().and(isSnapshot.negate());
-
-    addDependencyLayer(planBuilder, libDirectory, "dependencies", isThirdParty);
-    addDependencyLayer(planBuilder, libDirectory, "snapshot dependencies", isSnapshot);
-    addDependencyLayer(planBuilder, libDirectory, "project dependencies", isProjectDependency);
+    String layerPrefix = layerPrefixMaybe.orElse("");
+    addDependencyLayer(planBuilder, libDirectory, layerPrefix + "dependencies", isThirdParty);
+    addDependencyLayer(
+        planBuilder, libDirectory, layerPrefix + "snapshot dependencies", isSnapshot);
+    addDependencyLayer(
+        planBuilder, libDirectory, layerPrefix + "project dependencies", isProjectDependency);
   }
 
   private void addDependencyLayer(
@@ -155,13 +155,18 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
       Predicate<Path> predicate)
       throws IOException {
     FileEntriesLayer.Builder layerBuilder = FileEntriesLayer.builder().setName(layerName);
+
+    // to preserve the original folder structure
+    Path relativize = outputDirectory.relativize(libDirectory);
+
     try (Stream<Path> files = Files.list(libDirectory)) {
       files
           .filter(predicate)
           .forEach(
               path -> {
                 layerBuilder.addEntry(
-                    path, appRoot.resolve("lib").resolve(path.getFileName().toString()));
+                    path,
+                    appRoot.resolve(relativize.toString()).resolve(path.getFileName().toString()));
               });
     }
 
@@ -177,6 +182,11 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
     if (jibPlugin != null) {
       Xpp3Dom configurationDom = (Xpp3Dom) jibPlugin.getConfiguration();
       if (configurationDom != null) {
+        Xpp3Dom fastJarEnabled = configurationDom.getChild("fastJarEnabled");
+        if (fastJarEnabled != null) {
+          this.fastJarEnabled = Boolean.valueOf(fastJarEnabled.getValue());
+        }
+
         Xpp3Dom containerDom = configurationDom.getChild("container");
         if (containerDom != null) {
           Xpp3Dom appRootDom = containerDom.getChild("appRoot");
@@ -186,8 +196,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
           Xpp3Dom jvmFlagsDom = containerDom.getChild("jvmFlags");
           if (jvmFlagsDom != null) {
             jvmFlags =
-                Arrays.asList(jvmFlagsDom.getChildren())
-                    .stream()
+                Arrays.asList(jvmFlagsDom.getChildren()).stream()
                     .map(Xpp3Dom::getValue)
                     .collect(Collectors.toList());
           }

@@ -54,7 +54,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests for {@link JibQuarkusExtension}. */
 @RunWith(MockitoJUnitRunner.class)
-public class JibQuarkusExtensionTest {
+public class JibQuarkusExtensionTestForFastJar {
 
   @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -82,9 +82,7 @@ public class JibQuarkusExtensionTest {
   }
 
   private static List<String> layerToExtractionPaths(FileEntriesLayer layer) {
-    return layer
-        .getEntries()
-        .stream()
+    return layer.getEntries().stream()
         .map(layerEntry -> layerEntry.getExtractionPath().toString())
         .collect(Collectors.toList());
   }
@@ -92,11 +90,30 @@ public class JibQuarkusExtensionTest {
   @Before
   public void setUp() throws IOException {
     Path outputDir = tempFolder.newFolder("target").toPath();
-    Path quarkusLibDir = Files.createDirectory(outputDir.resolve("lib"));
-    Files.createFile(outputDir.resolve("my-app-runner.jar"));
-    Files.createFile(quarkusLibDir.resolve("com.example.sub-module-artifact.jar"));
-    Files.createFile(quarkusLibDir.resolve("com.example.third-party-artifact.jar"));
-    Files.createFile(quarkusLibDir.resolve("com.example.third-party-SNAPSHOT-artifact.jar"));
+    tempFolder.newFolder("target/quarkus-app/lib");
+
+    // runner
+    Files.createFile(outputDir.resolve("quarkus-app/quarkus-run.jar"));
+
+    // application code
+    Path appPath = Files.createDirectory(outputDir.resolve("quarkus-app/app"));
+    Files.createFile(appPath.resolve("my-app-1.0.0-SNAPSHOT.jar"));
+
+    // quarkus bytecode data
+    Path quarkusBytecodePath = Files.createDirectory(outputDir.resolve("quarkus-app/quarkus"));
+    Files.createFile(quarkusBytecodePath.resolve("bytecode.dat"));
+
+    // boot dependencies
+    Path quarkusLibBoot = Files.createDirectory(outputDir.resolve("quarkus-app/lib/boot"));
+    Files.createFile(quarkusLibBoot.resolve("com.example.sub-module-artifact.jar"));
+    Files.createFile(quarkusLibBoot.resolve("com.example.third-party-artifact.jar"));
+    Files.createFile(quarkusLibBoot.resolve("com.example.third-party-SNAPSHOT-artifact.jar"));
+
+    // main dependencies
+    Path quarkusLibMain = Files.createDirectory(outputDir.resolve("quarkus-app/lib/main"));
+    Files.createFile(quarkusLibMain.resolve("com.example.sub-module-artifact.jar"));
+    Files.createFile(quarkusLibMain.resolve("com.example.third-party-artifact.jar"));
+    Files.createFile(quarkusLibMain.resolve("com.example.third-party-SNAPSHOT-artifact.jar"));
 
     when(mavenData.getMavenProject()).thenReturn(jibModule);
     when(mavenData.getMavenSession()).thenReturn(mavenSession);
@@ -114,6 +131,7 @@ public class JibQuarkusExtensionTest {
     when(mavenBuild.getDirectory()).thenReturn(outputDir.toString());
 
     Xpp3Dom jibConfigurationDom = new Xpp3Dom("configuration");
+    Xpp3Dom fastJarEnabledDom = new Xpp3Dom("fastJarEnabled");
     Xpp3Dom containerDom = new Xpp3Dom("container");
     Xpp3Dom appRootDom = new Xpp3Dom("appRoot");
     Xpp3Dom jvmFlagsDom = new Xpp3Dom("jvmFlags");
@@ -121,9 +139,11 @@ public class JibQuarkusExtensionTest {
     Xpp3Dom jvmFlag2Dom = new Xpp3Dom("flag");
 
     appRootDom.setValue("/new/appRoot");
+    fastJarEnabledDom.setValue("true");
     jvmFlag1Dom.setValue("-verbose:gc");
     jvmFlag2Dom.setValue("-Dmy.property=value");
 
+    jibConfigurationDom.addChild(fastJarEnabledDom);
     jibConfigurationDom.addChild(containerDom);
     containerDom.addChild(appRootDom);
     containerDom.addChild(jvmFlagsDom);
@@ -142,13 +162,19 @@ public class JibQuarkusExtensionTest {
             .extendContainerBuildPlan(buildPlan, null, Optional.empty(), mavenData, logger);
 
     assertEquals(
-        Arrays.asList("java", "-verbose:gc", "-Dmy.property=value", "-jar", "/new/appRoot/app.jar"),
+        Arrays.asList(
+            "java",
+            "-verbose:gc",
+            "-Dmy.property=value",
+            "-jar",
+            "/new/appRoot/quarkus-app/quarkus-run.jar"),
         newPlan.getEntrypoint());
   }
 
   @Test
   public void testExtendContainerBuildPlan_noQuarkusRunnerJar() throws IOException {
-    Files.delete(tempFolder.getRoot().toPath().resolve("target").resolve("my-app-runner.jar"));
+    Files.delete(
+        tempFolder.getRoot().toPath().resolve("target").resolve("quarkus-app/quarkus-run.jar"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
 
     try {
@@ -160,7 +186,7 @@ public class JibQuarkusExtensionTest {
       assertThat(
           ex.getMessage(),
           endsWith(
-              "/my-app-runner.jar doesn't exist; did you run the Qaurkus Maven plugin "
+              "quarkus-app/quarkus-run.jar doesn't exist; did you run the Qaurkus Maven plugin "
                   + "('compile' and 'quarkus:build' Maven goals)?"));
     }
   }
@@ -179,32 +205,83 @@ public class JibQuarkusExtensionTest {
         new JibQuarkusExtension()
             .extendContainerBuildPlan(buildPlan, null, Optional.empty(), mavenData, logger);
 
-    assertEquals(6, newPlan.getLayers().size());
+    // 11 layers are expected, it's worth to not that this is the worst case
+    // scenario
+    // I expect that in real world builds there will be around 7
+    // 3 for main deps
+    // 3 for boot deps
+    // 1 application code jar
+    // 1 byte code
+    // 1 quarkus runner
+    // 2 extra layers
+    // 1 boot jar
+
+    assertEquals(11, newPlan.getLayers().size());
     FileEntriesLayer layer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer layer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
     FileEntriesLayer layer3 = (FileEntriesLayer) newPlan.getLayers().get(2);
     FileEntriesLayer layer4 = (FileEntriesLayer) newPlan.getLayers().get(3);
     FileEntriesLayer layer5 = (FileEntriesLayer) newPlan.getLayers().get(4);
     FileEntriesLayer layer6 = (FileEntriesLayer) newPlan.getLayers().get(5);
+    FileEntriesLayer layer7 = (FileEntriesLayer) newPlan.getLayers().get(6);
+    FileEntriesLayer layer8 = (FileEntriesLayer) newPlan.getLayers().get(7);
+    FileEntriesLayer layer9 = (FileEntriesLayer) newPlan.getLayers().get(8);
+    FileEntriesLayer layer10 = (FileEntriesLayer) newPlan.getLayers().get(9);
+    FileEntriesLayer layer11 = (FileEntriesLayer) newPlan.getLayers().get(10);
 
-    assertEquals("dependencies", layer1.getName());
-    assertEquals("snapshot dependencies", layer2.getName());
-    assertEquals("project dependencies", layer3.getName());
-    assertEquals("quarkus jar", layer4.getName());
-    assertEquals("extra files", layer5.getName());
-    assertEquals("extra files", layer6.getName());
+    assertEquals("main-dependencies", layer1.getName());
+    assertEquals("main-snapshot dependencies", layer2.getName());
+    assertEquals("main-project dependencies", layer3.getName());
+    assertEquals("boot-dependencies", layer4.getName());
+    assertEquals("boot-snapshot dependencies", layer5.getName());
+    assertEquals("boot-project dependencies", layer6.getName());
+    // there always going to be just one layer with application code
+    assertEquals("application-snapshot dependencies", layer7.getName());
+    assertEquals("bytecode-dependencies", layer8.getName());
+    assertEquals("quarkus jar", layer9.getName());
+    assertEquals("extra files", layer10.getName());
+    assertEquals("extra files", layer11.getName());
 
+    // main layers
     assertEquals(
-        Arrays.asList("/new/appRoot/lib/com.example.third-party-artifact.jar"),
+        Arrays.asList("/new/appRoot/quarkus-app/lib/main/com.example.third-party-artifact.jar"),
         layerToExtractionPaths(layer1));
     assertEquals(
-        Arrays.asList("/new/appRoot/lib/com.example.third-party-SNAPSHOT-artifact.jar"),
+        Arrays.asList(
+            "/new/appRoot/quarkus-app/lib/main/com.example.third-party-SNAPSHOT-artifact.jar"),
         layerToExtractionPaths(layer2));
     assertEquals(
-        Arrays.asList("/new/appRoot/lib/com.example.sub-module-artifact.jar"),
+        Arrays.asList("/new/appRoot/quarkus-app/lib/main/com.example.sub-module-artifact.jar"),
         layerToExtractionPaths(layer3));
-    assertEquals(Arrays.asList("/new/appRoot/app.jar"), layerToExtractionPaths(layer4));
-    assertEquals(extraLayer1.getEntries(), layer5.getEntries());
-    assertEquals(extraLayer2.getEntries(), layer6.getEntries());
+
+    // boot layers
+    assertEquals(
+        Arrays.asList("/new/appRoot/quarkus-app/lib/boot/com.example.third-party-artifact.jar"),
+        layerToExtractionPaths(layer4));
+    assertEquals(
+        Arrays.asList(
+            "/new/appRoot/quarkus-app/lib/boot/com.example.third-party-SNAPSHOT-artifact.jar"),
+        layerToExtractionPaths(layer5));
+    assertEquals(
+        Arrays.asList("/new/appRoot/quarkus-app/lib/boot/com.example.sub-module-artifact.jar"),
+        layerToExtractionPaths(layer6));
+
+    // application
+    assertEquals(
+        Arrays.asList("/new/appRoot/quarkus-app/app/my-app-1.0.0-SNAPSHOT.jar"),
+        layerToExtractionPaths(layer7));
+
+    // bytecode
+    assertEquals(
+        Arrays.asList("/new/appRoot/quarkus-app/quarkus/bytecode.dat"),
+        layerToExtractionPaths(layer8));
+
+    // quarkus runner
+    assertEquals(
+        Arrays.asList("/new/appRoot/quarkus-app/quarkus-run.jar"), layerToExtractionPaths(layer9));
+
+    // extra layers
+    assertEquals(extraLayer1.getEntries(), layer10.getEntries());
+    assertEquals(extraLayer2.getEntries(), layer11.getEntries());
   }
 }
