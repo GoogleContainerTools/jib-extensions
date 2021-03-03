@@ -141,8 +141,8 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
             .collect(
                 Collectors.toMap(artifact -> artifact.getFile().toPath(), artifact -> artifact));
 
-    // parent dependencies that have not been found in any layer (due to different version or
-    // filtering)
+    // Parent dependencies that have not been found in any layer (due to different version or
+    // filtering). Only needed for logging.
     Map<Path, Artifact> parentDependenciesNotFound = new HashMap<>(parentDependencies);
 
     List<FileEntriesLayer.Builder> newLayerBuilders = new ArrayList<>();
@@ -178,31 +178,13 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
                       // keep in original layer
                       logger.log(
                           LogLevel.DEBUG,
-                          "Keep " + sourceFilePath + " in " + originalLayer.getName() + ".");
+                          "Keeping " + sourceFilePath + " in " + originalLayer.getName() + ".");
                       layerBuilder.addEntry(entry);
                     }
                   });
         });
 
-    parentDependenciesNotFound.forEach(
-        (filePath, artifact) -> {
-          logger.log(LogLevel.INFO, "Dependency from parent not found: " + filePath);
-          String potentialMatches =
-              originalLayers
-                  .stream()
-                  .flatMap(layer -> layer.getEntries().stream())
-                  .map(entry -> entry.getSourceFile())
-                  .filter(
-                      file -> {
-                        String string = file.getFileName().toString();
-                        return string.endsWith(".jar") && string.contains(artifact.getArtifactId());
-                      })
-                  .map(file -> file.toString())
-                  .collect(Collectors.joining());
-          if (!potentialMatches.isEmpty()) {
-            logger.log(LogLevel.INFO, "Potential matches: " + potentialMatches);
-          }
-        });
+    logMissingParentDependencies(logger, parentDependenciesNotFound, originalLayers);
 
     List<FileEntriesLayer> newLayers =
         newLayerBuilders
@@ -238,6 +220,31 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       throw new JibPluginExtensionException(
           getClass(), "Error when getting parent dependencies: ", ex);
     }
+  }
+
+  private void logMissingParentDependencies(
+      ExtensionLogger logger,
+      Map<Path, Artifact> parentDependenciesNotFound,
+      List<FileEntriesLayer> originalLayers) {
+    parentDependenciesNotFound.forEach(
+        (filePath, artifact) -> {
+          logger.log(LogLevel.INFO, "Dependency from parent not found: " + filePath);
+          String potentialMatches =
+              originalLayers
+                  .stream()
+                  .flatMap(layer -> layer.getEntries().stream())
+                  .map(entry -> entry.getSourceFile())
+                  .filter(
+                      file -> {
+                        String string = file.getFileName().toString();
+                        return string.endsWith(".jar") && string.contains(artifact.getArtifactId());
+                      })
+                  .map(file -> file.toString())
+                  .collect(Collectors.joining(","));
+          if (!potentialMatches.isEmpty()) {
+            logger.log(LogLevel.INFO, "Potential matches: " + potentialMatches);
+          }
+        });
   }
 
   private void preparePathMatchersAndLayerBuilders(

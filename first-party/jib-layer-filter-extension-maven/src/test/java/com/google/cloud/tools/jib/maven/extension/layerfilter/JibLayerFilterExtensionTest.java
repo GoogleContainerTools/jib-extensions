@@ -32,7 +32,6 @@ import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +69,6 @@ public class JibLayerFilterExtensionTest {
   @Before
   public void setUp() throws DependencyResolutionException {
     when(config.getFilters()).thenReturn(Collections.emptyList());
-    when(config.isCreateParentDependencyLayers()).thenReturn(false);
     when(mavenData.getMavenProject()).thenReturn(mavenProject);
     when(mavenData.getMavenSession()).thenReturn(mavenSession);
     when(mavenProject.getParent()).thenReturn(mavenParentProject);
@@ -112,11 +110,9 @@ public class JibLayerFilterExtensionTest {
   }
 
   private static Dependency mockDependency(String sourcePath, String artifactId) {
-    File file = mock(File.class);
-    when(file.toPath()).thenReturn(Paths.get(sourcePath));
     Artifact artifact = mock(Artifact.class);
     when(artifact.getArtifactId()).thenReturn(artifactId);
-    when(artifact.getFile()).thenReturn(file);
+    when(artifact.getFile()).thenReturn(Paths.get(sourcePath).toFile());
     return new Dependency(artifact, null);
   }
 
@@ -367,8 +363,6 @@ public class JibLayerFilterExtensionTest {
 
     try {
       JibLayerFilterExtension extension = new JibLayerFilterExtension();
-      extension.dependencyResolver = projectDependenciesResolver;
-
       extension.extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
