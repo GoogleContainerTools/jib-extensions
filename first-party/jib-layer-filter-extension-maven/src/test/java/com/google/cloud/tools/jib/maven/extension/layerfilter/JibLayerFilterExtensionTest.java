@@ -19,6 +19,7 @@ package com.google.cloud.tools.jib.maven.extension.layerfilter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,15 +28,26 @@ import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.LayerObject;
+import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionResult;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -47,11 +59,37 @@ public class JibLayerFilterExtensionTest {
 
   @Mock private Configuration config;
   @Mock private ExtensionLogger logger;
+  @Mock private MavenData mavenData;
+  @Mock private MavenProject mavenProject;
+  @Mock private MavenProject mavenParentProject;
+  @Mock private MavenSession mavenSession;
+  @Mock private ProjectDependenciesResolver projectDependenciesResolver;
+  @Mock private DependencyResolutionResult dependencyResolutionResult;
+
+  @Before
+  public void setUp() throws DependencyResolutionException {
+    when(config.getFilters()).thenReturn(Collections.emptyList());
+    when(mavenData.getMavenProject()).thenReturn(mavenProject);
+    when(mavenData.getMavenSession()).thenReturn(mavenSession);
+    when(mavenProject.getParent()).thenReturn(mavenParentProject);
+    when(projectDependenciesResolver.resolve(any(DependencyResolutionRequest.class)))
+        .thenReturn(dependencyResolutionResult);
+  }
 
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
     for (String path : filePaths) {
       builder.addEntry(Paths.get("whatever"), AbsoluteUnixPath.get(path));
+    }
+    return builder.build();
+  }
+
+  private static FileEntriesLayer buildLayer(
+      String layerName, List<String> sourcePaths, List<String> inContainerPaths) {
+    FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
+    for (int i = 0; i < sourcePaths.size(); i++) {
+      builder.addEntry(
+          Paths.get(sourcePaths.get(i)), AbsoluteUnixPath.get(inContainerPaths.get(i)));
     }
     return builder.build();
   }
@@ -69,6 +107,13 @@ public class JibLayerFilterExtensionTest {
     when(filter.getGlob()).thenReturn(glob);
     when(filter.getToLayer()).thenReturn(toLayer);
     return filter;
+  }
+
+  private static Dependency mockDependency(String sourcePath, String artifactId) {
+    Artifact artifact = mock(Artifact.class);
+    when(artifact.getArtifactId()).thenReturn(artifactId);
+    when(artifact.getFile()).thenReturn(Paths.get(sourcePath).toFile());
+    return new Dependency(artifact, null);
   }
 
   @Test
@@ -290,5 +335,149 @@ public class JibLayerFilterExtensionTest {
     assertEquals(
         Arrays.asList("/alpha/Bob", "/beta/Bob", "/gamma/Bob"), layerToExtractionPaths(newLayer5));
     assertEquals(Arrays.asList("/gamma/Charlie"), layerToExtractionPaths(newLayer6));
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_noProjectDependenciesResolver() {
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+
+    when(config.isCreateParentDependencyLayers()).thenReturn(true);
+    try {
+      new JibLayerFilterExtension()
+          .extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
+      fail();
+    } catch (JibPluginExtensionException ex) {
+      assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
+      assertEquals(
+          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a more recent jib plugin version to fix this.",
+          ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_noParent() {
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+
+    when(config.isCreateParentDependencyLayers()).thenReturn(true);
+    when(mavenProject.getParent()).thenReturn(null);
+
+    try {
+      JibLayerFilterExtension extension = new JibLayerFilterExtension();
+      extension.extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
+      fail();
+    } catch (JibPluginExtensionException ex) {
+      assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
+      assertEquals("Try to get parent dependencies, but project has no parent.", ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_noParentDependencies()
+      throws JibPluginExtensionException {
+    FileEntriesLayer layer1 = buildLayer("", Arrays.asList("/app/libs/parent-lib-1.0.0.jar"));
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer1).build();
+
+    when(config.isCreateParentDependencyLayers()).thenReturn(true);
+    when(dependencyResolutionResult.getDependencies()).thenReturn(Collections.emptyList());
+
+    JibLayerFilterExtension extension = new JibLayerFilterExtension();
+    extension.dependencyResolver = projectDependenciesResolver;
+
+    ContainerBuildPlan newPlan =
+        extension.extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
+
+    assertEquals(1, newPlan.getLayers().size());
+    FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
+    assertEquals("", newLayer1.getName());
+    assertEquals(layer1.getEntries(), newLayer1.getEntries());
+  }
+
+  @Test
+  public void testExtendContainerBuildPlan_createParentLayers_withParentDependencies()
+      throws JibPluginExtensionException {
+    FileEntriesLayer layer1 =
+        buildLayer(
+            "layer1",
+            Arrays.asList(
+                "parentlib1path",
+                "directlibpath",
+                // The extension makes no assumptions about the filenames' structure.
+                // Only if a dependency could not be found, it needs the suffix .jar
+                // and the artifact id within the filename to find and log potential matches
+                "parent-lib-different-version-2.0.0-whatever.jar"),
+            Arrays.asList(
+                "/whatever/parent-lib1-1.0.0.jar",
+                "/whatever/direct-lib-2.0.0.jar",
+                "/whatever/parent-lib-different-version-2.0.0.jar"));
+    FileEntriesLayer layer2 =
+        buildLayer(
+            "layer2",
+            Arrays.asList("parentlib2path"),
+            Arrays.asList("/whatever/parent-lib2-3.0.0.jar"));
+
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder().addLayer(layer1).addLayer(layer2).build();
+
+    when(config.isCreateParentDependencyLayers()).thenReturn(true);
+
+    Dependency parentDependency1 = mockDependency("parentlib1path", "parent-lib1");
+    Dependency parentDependency2 = mockDependency("parentlib2path", "parent-lib2");
+    // If the resolved file path for the dependency does not match, the dependency must not be moved
+    // to parent layer
+    Dependency nonMatchingParentDependency =
+        mockDependency(
+            "parent-lib-different-version-1.0.0-whatever.jar", "parent-lib-different-version");
+    // A parent dependency that has been filtered before and so does not exist in any layer
+    Dependency filteredParentDependency =
+        mockDependency("parentlibfilteredpath", "parent-lib-filtered");
+
+    when(dependencyResolutionResult.getDependencies())
+        .thenReturn(
+            Arrays.asList(
+                parentDependency1,
+                parentDependency2,
+                nonMatchingParentDependency,
+                filteredParentDependency));
+
+    JibLayerFilterExtension extension = new JibLayerFilterExtension();
+    extension.dependencyResolver = projectDependenciesResolver;
+
+    ContainerBuildPlan newPlan =
+        extension.extendContainerBuildPlan(buildPlan, null, Optional.of(config), mavenData, logger);
+
+    assertEquals(3, newPlan.getLayers().size());
+
+    List<FileEntriesLayer> expectedNewLayers =
+        Arrays.asList(
+            buildLayer(
+                "layer1-parent",
+                Arrays.asList("parentlib1path"),
+                Arrays.asList("/whatever/parent-lib1-1.0.0.jar")),
+            buildLayer(
+                "layer1",
+                Arrays.asList("directlibpath", "parent-lib-different-version-2.0.0-whatever.jar"),
+                Arrays.asList(
+                    "/whatever/direct-lib-2.0.0.jar",
+                    "/whatever/parent-lib-different-version-2.0.0.jar")),
+            buildLayer(
+                "layer2-parent",
+                Arrays.asList("parentlib2path"),
+                Arrays.asList("/whatever/parent-lib2-3.0.0.jar")));
+
+    for (int i = 0; i < expectedNewLayers.size(); i++) {
+      assertEquals(expectedNewLayers.get(i).getName(), newPlan.getLayers().get(i).getName());
+      assertEquals(
+          expectedNewLayers.get(i).getName(),
+          expectedNewLayers.get(i).getEntries(),
+          ((FileEntriesLayer) newPlan.getLayers().get(i)).getEntries());
+    }
+
+    verify(logger)
+        .log(
+            LogLevel.INFO,
+            "Dependency from parent not found: parent-lib-different-version-1.0.0-whatever.jar");
+    verify(logger)
+        .log(LogLevel.INFO, "Potential matches: parent-lib-different-version-2.0.0-whatever.jar");
+    verify(logger).log(LogLevel.INFO, "Dependency from parent not found: parentlibfilteredpath");
   }
 }

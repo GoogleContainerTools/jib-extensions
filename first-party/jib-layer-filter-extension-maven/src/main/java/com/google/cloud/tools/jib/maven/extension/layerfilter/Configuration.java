@@ -36,6 +36,7 @@ import java.util.List;
  *       <toLayer>in-house dependencies</toLayer>
  *     </filter>
  *   </filters>
+ *   <createParentDependencyLayers>true</createParentDependencyLayers>
  * </configuration>
  * }</pre>
  */
@@ -56,7 +57,18 @@ public class Configuration {
 
   private List<Filter> filters = new ArrayList<>();
 
+  /**
+   * Whether to create separate layers for dependencies that stem from the parent POM. The parent
+   * layers are created after the filters have been applied. For every original layer and every
+   * layer defined by the filters, a parent layer will be created (if not empty).
+   */
+  private boolean createParentDependencyLayers;
+
   public List<Filter> getFilters() {
     return filters;
+  }
+
+  public boolean isCreateParentDependencyLayers() {
+    return createParentDependencyLayers;
   }
 }

@@ -33,15 +33,30 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionResult;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 
+@Named
+@Singleton
 public class JibLayerFilterExtension implements JibMavenPluginExtension<Configuration> {
 
   private Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
+
+  @VisibleForTesting @Inject ProjectDependenciesResolver dependencyResolver;
 
   // (layer name, layer builder) map for new layers of configured <toLayer>
   @VisibleForTesting Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
@@ -102,7 +117,134 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
         .map(FileEntriesLayer.Builder::build)
         .filter(layer -> !layer.getEntries().isEmpty())
         .forEach(newPlanBuilder::addLayer);
-    return newPlanBuilder.build();
+
+    ContainerBuildPlan newPlan = newPlanBuilder.build();
+
+    return config.get().isCreateParentDependencyLayers()
+        ? moveParentDepsToNewLayers(newPlan, mavenData, logger)
+        : newPlan;
+  }
+
+  private ContainerBuildPlan moveParentDepsToNewLayers(
+      ContainerBuildPlan buildPlan, MavenData mavenData, ExtensionLogger logger)
+      throws JibPluginExtensionException {
+
+    logger.log(LogLevel.INFO, "Moving parent dependencies to new layers.");
+
+    // The key is the source file path for the parent dependency.
+    // We only consider artifacts that have been resolved.
+    Map<Path, Artifact> parentDependencies =
+        getParentDependencies(mavenData)
+            .stream()
+            .map(Dependency::getArtifact)
+            .filter(artifact -> artifact.getFile() != null)
+            .collect(
+                Collectors.toMap(artifact -> artifact.getFile().toPath(), artifact -> artifact));
+
+    // Parent dependencies that have not been found in any layer (due to different version or
+    // filtering). Only needed for logging.
+    Map<Path, Artifact> parentDependenciesNotFound = new HashMap<>(parentDependencies);
+
+    List<FileEntriesLayer.Builder> newLayerBuilders = new ArrayList<>();
+
+    @SuppressWarnings("unchecked")
+    List<FileEntriesLayer> originalLayers = ((List<FileEntriesLayer>) buildPlan.getLayers());
+    originalLayers.forEach(
+        originalLayer -> {
+          // for each layer, create a parent layer
+          String parentLayerName = originalLayer.getName() + "-parent";
+          FileEntriesLayer.Builder parentLayerBuilder =
+              FileEntriesLayer.builder().setName(parentLayerName);
+          newLayerBuilders.add(parentLayerBuilder);
+          // ... and the normal layer
+          FileEntriesLayer.Builder layerBuilder =
+              FileEntriesLayer.builder().setName(originalLayer.getName());
+          newLayerBuilders.add(layerBuilder);
+
+          originalLayer
+              .getEntries()
+              .forEach(
+                  entry -> {
+                    Path sourceFilePath = entry.getSourceFile();
+                    if (parentDependencies.containsKey(sourceFilePath)) {
+                      // move to parent layer
+                      logger.log(
+                          LogLevel.DEBUG,
+                          "Moving " + sourceFilePath + " to " + parentLayerName + ".");
+                      parentLayerBuilder.addEntry(entry);
+                      // mark parent dep as found
+                      parentDependenciesNotFound.remove(sourceFilePath);
+                    } else {
+                      // keep in original layer
+                      logger.log(
+                          LogLevel.DEBUG,
+                          "Keeping " + sourceFilePath + " in " + originalLayer.getName() + ".");
+                      layerBuilder.addEntry(entry);
+                    }
+                  });
+        });
+
+    logMissingParentDependencies(logger, parentDependenciesNotFound, originalLayers);
+
+    List<FileEntriesLayer> newLayers =
+        newLayerBuilders
+            .stream()
+            .map(FileEntriesLayer.Builder::build)
+            .filter(layer -> !layer.getEntries().isEmpty())
+            .collect(Collectors.toList());
+    return buildPlan.toBuilder().setLayers(newLayers).build();
+  }
+
+  private List<Dependency> getParentDependencies(MavenData mavenData)
+      throws JibPluginExtensionException {
+    if (mavenData.getMavenProject().getParent() == null) {
+      throw new JibPluginExtensionException(
+          getClass(), "Try to get parent dependencies, but project has no parent.");
+    }
+    if (dependencyResolver == null) {
+      throw new JibPluginExtensionException(
+          getClass(),
+          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a more recent jib plugin version to fix this.");
+    }
+    try {
+
+      DefaultDependencyResolutionRequest request =
+          new DefaultDependencyResolutionRequest(
+              mavenData.getMavenProject().getParent(),
+              mavenData.getMavenSession().getRepositorySession());
+      request.setResolutionFilter(new ScopeDependencyFilter("test"));
+      DependencyResolutionResult resolutionResult = dependencyResolver.resolve(request);
+
+      return resolutionResult.getDependencies();
+    } catch (DependencyResolutionException ex) {
+      throw new JibPluginExtensionException(
+          getClass(), "Error when getting parent dependencies: ", ex);
+    }
+  }
+
+  private void logMissingParentDependencies(
+      ExtensionLogger logger,
+      Map<Path, Artifact> parentDependenciesNotFound,
+      List<FileEntriesLayer> originalLayers) {
+    parentDependenciesNotFound.forEach(
+        (filePath, artifact) -> {
+          logger.log(LogLevel.INFO, "Dependency from parent not found: " + filePath);
+          String potentialMatches =
+              originalLayers
+                  .stream()
+                  .flatMap(layer -> layer.getEntries().stream())
+                  .map(entry -> entry.getSourceFile())
+                  .filter(
+                      file -> {
+                        String string = file.getFileName().toString();
+                        return string.endsWith(".jar") && string.contains(artifact.getArtifactId());
+                      })
+                  .map(file -> file.toString())
+                  .collect(Collectors.joining(","));
+          if (!potentialMatches.isEmpty()) {
+            logger.log(LogLevel.INFO, "Potential matches: " + potentialMatches);
+          }
+        });
   }
 
   private void preparePathMatchersAndLayerBuilders(
