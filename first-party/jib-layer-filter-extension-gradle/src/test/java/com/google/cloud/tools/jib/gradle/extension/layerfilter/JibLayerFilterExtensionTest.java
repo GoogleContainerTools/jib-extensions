@@ -113,8 +113,8 @@ public class JibLayerFilterExtensionTest {
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
       assertEquals(
-          "moving files into built-in layer 'same layer name' is not supported; specify a new "
-              + "layer name in '<toLayer>'.",
+          "moving files into existing layer 'same layer name' is prohibited; specify a new layer "
+              + "name in 'filter.toLayer'.",
           ex.getMessage());
     }
   }

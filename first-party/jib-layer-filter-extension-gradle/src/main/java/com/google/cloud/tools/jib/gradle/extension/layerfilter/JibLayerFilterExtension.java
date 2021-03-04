@@ -115,9 +115,9 @@ public class JibLayerFilterExtension implements JibGradlePluginExtension<Configu
       if (!toLayerName.isEmpty() && originalLayerNames.contains(toLayerName)) {
         throw new JibPluginExtensionException(
             getClass(),
-            "moving files into built-in layer '"
+            "moving files into existing layer '"
                 + toLayerName
-                + "' is not supported; specify a new layer name in '<toLayer>'.");
+                + "' is prohibited; specify a new layer name in 'filter.toLayer'.");
       }
       if (filter.getGlob().isEmpty()) {
         throw new JibPluginExtensionException(

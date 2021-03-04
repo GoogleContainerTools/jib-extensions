@@ -63,6 +63,6 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
 - If multiple filters match a file, the last filter in the order applies to the file.
 - Omitting `toLayer` discards the matching files.
 - You may write multiple filters moving files into the same layer. It does not create multiple layers with the same name.
-- You cannot move files into Jib's built-in layers. You can only create new layers when moving files. If you see an error message "moving files into built-in layer is not supported", it means you accidentally chose a name already in use by Jib. Simply use a different `toLayer` name.
+- You cannot move files into existing layers. You can only create new layers when moving files. If you see an error message "moving files into existing layer '...' is prohibited", it means you accidentally chose a conflicting name. Simply use a different `toLayer` name.
 - New layers are created in the order they appear in `filters`.
 - The extension does not create an empty layer when no files are matched.
