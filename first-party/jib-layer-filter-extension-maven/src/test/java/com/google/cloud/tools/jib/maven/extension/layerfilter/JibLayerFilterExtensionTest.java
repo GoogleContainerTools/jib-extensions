@@ -19,7 +19,7 @@ package com.google.cloud.tools.jib.maven.extension.layerfilter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -76,12 +76,9 @@ public class JibLayerFilterExtensionTest {
         .thenReturn(dependencyResolutionResult);
   }
 
-  private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
-    FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
-    for (String path : filePaths) {
-      builder.addEntry(Paths.get("whatever"), AbsoluteUnixPath.get(path));
-    }
-    return builder.build();
+  private static FileEntriesLayer buildLayer(String layerName, List<String> inContainerPaths) {
+    List<String> sourcePaths = Collections.nCopies(inContainerPaths.size(), "whatever");
+    return buildLayer(layerName, sourcePaths, inContainerPaths);
   }
 
   private static FileEntriesLayer buildLayer(
@@ -158,8 +155,8 @@ public class JibLayerFilterExtensionTest {
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
       assertEquals(
-          "moving files into built-in layer 'same layer name' is not supported; specify a new "
-              + "layer name in '<toLayer>'.",
+          "moving files into existing layer 'same layer name' is prohibited; specify a new layer "
+              + "name in '<toLayer>'.",
           ex.getMessage());
     }
   }
@@ -349,7 +346,8 @@ public class JibLayerFilterExtensionTest {
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibLayerFilterExtension.class, ex.getExtensionClass());
       assertEquals(
-          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a more recent jib plugin version to fix this.",
+          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a "
+              + "more recent Jib plugin version to fix this.",
           ex.getMessage());
     }
   }

@@ -128,11 +128,10 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
   private ContainerBuildPlan moveParentDepsToNewLayers(
       ContainerBuildPlan buildPlan, MavenData mavenData, ExtensionLogger logger)
       throws JibPluginExtensionException {
-
     logger.log(LogLevel.INFO, "Moving parent dependencies to new layers.");
 
-    // The key is the source file path for the parent dependency.
-    // We only consider artifacts that have been resolved.
+    // The key is the source file path for the parent dependency. We only consider artifacts that
+    // have been resolved.
     Map<Path, Artifact> parentDependencies =
         getParentDependencies(mavenData)
             .stream()
@@ -149,40 +148,32 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
 
     @SuppressWarnings("unchecked")
     List<FileEntriesLayer> originalLayers = ((List<FileEntriesLayer>) buildPlan.getLayers());
-    originalLayers.forEach(
-        originalLayer -> {
-          // for each layer, create a parent layer
-          String parentLayerName = originalLayer.getName() + "-parent";
-          FileEntriesLayer.Builder parentLayerBuilder =
-              FileEntriesLayer.builder().setName(parentLayerName);
-          newLayerBuilders.add(parentLayerBuilder);
-          // ... and the normal layer
-          FileEntriesLayer.Builder layerBuilder =
-              FileEntriesLayer.builder().setName(originalLayer.getName());
-          newLayerBuilders.add(layerBuilder);
+    for (FileEntriesLayer originalLayer : originalLayers) {
+      String parentLayerName = originalLayer.getName() + "-parent";
+      FileEntriesLayer.Builder parentLayerBuilder =
+          FileEntriesLayer.builder().setName(parentLayerName);
+      FileEntriesLayer.Builder layerBuilder =
+          originalLayer.toBuilder().setEntries(Collections.emptyList());
 
-          originalLayer
-              .getEntries()
-              .forEach(
-                  entry -> {
-                    Path sourceFilePath = entry.getSourceFile();
-                    if (parentDependencies.containsKey(sourceFilePath)) {
-                      // move to parent layer
-                      logger.log(
-                          LogLevel.DEBUG,
-                          "Moving " + sourceFilePath + " to " + parentLayerName + ".");
-                      parentLayerBuilder.addEntry(entry);
-                      // mark parent dep as found
-                      parentDependenciesNotFound.remove(sourceFilePath);
-                    } else {
-                      // keep in original layer
-                      logger.log(
-                          LogLevel.DEBUG,
-                          "Keeping " + sourceFilePath + " in " + originalLayer.getName() + ".");
-                      layerBuilder.addEntry(entry);
-                    }
-                  });
-        });
+      newLayerBuilders.add(parentLayerBuilder);
+      newLayerBuilders.add(layerBuilder);
+
+      for (FileEntry entry : originalLayer.getEntries()) {
+        Path sourceFilePath = entry.getSourceFile();
+        if (parentDependencies.containsKey(sourceFilePath)) {
+          // move to parent layer
+          logger.log(LogLevel.DEBUG, "Moving " + sourceFilePath + " to " + parentLayerName + ".");
+          parentLayerBuilder.addEntry(entry);
+          // mark parent dep as found
+          parentDependenciesNotFound.remove(sourceFilePath);
+        } else {
+          // keep in original layer
+          logger.log(
+              LogLevel.DEBUG, "Keeping " + sourceFilePath + " in " + originalLayer.getName() + ".");
+          layerBuilder.addEntry(entry);
+        }
+      }
+    }
 
     logMissingParentDependencies(logger, parentDependenciesNotFound, originalLayers);
 
@@ -204,10 +195,11 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     if (dependencyResolver == null) {
       throw new JibPluginExtensionException(
           getClass(),
-          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a more recent jib plugin version to fix this.");
+          "Try to get parent dependencies, but ProjectDependenciesResolver is null. Please use a "
+              + "more recent Jib plugin version to fix this.");
     }
-    try {
 
+    try {
       DefaultDependencyResolutionRequest request =
           new DefaultDependencyResolutionRequest(
               mavenData.getMavenProject().getParent(),
@@ -218,7 +210,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       return resolutionResult.getDependencies();
     } catch (DependencyResolutionException ex) {
       throw new JibPluginExtensionException(
-          getClass(), "Error when getting parent dependencies: ", ex);
+          getClass(), "Error when getting parent dependencies", ex);
     }
   }
 
@@ -233,13 +225,13 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
               originalLayers
                   .stream()
                   .flatMap(layer -> layer.getEntries().stream())
-                  .map(entry -> entry.getSourceFile())
+                  .map(FileEntry::getSourceFile)
                   .filter(
                       file -> {
                         String string = file.getFileName().toString();
                         return string.endsWith(".jar") && string.contains(artifact.getArtifactId());
                       })
-                  .map(file -> file.toString())
+                  .map(Path::toString)
                   .collect(Collectors.joining(","));
           if (!potentialMatches.isEmpty()) {
             logger.log(LogLevel.INFO, "Potential matches: " + potentialMatches);
@@ -257,9 +249,9 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       if (!toLayerName.isEmpty() && originalLayerNames.contains(toLayerName)) {
         throw new JibPluginExtensionException(
             getClass(),
-            "moving files into built-in layer '"
+            "moving files into existing layer '"
                 + toLayerName
-                + "' is not supported; specify a new layer name in '<toLayer>'.");
+                + "' is prohibited; specify a new layer name in '<toLayer>'.");
       }
       if (filter.getGlob().isEmpty()) {
         throw new JibPluginExtensionException(
