@@ -30,6 +30,7 @@ import com.google.cloud.tools.jib.gradle.extension.GradleData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -169,7 +170,8 @@ public class JibQuarkusExtensionTest {
       assertThat(
           ex.getMessage(),
           endsWith(
-              "/my-app-runner.jar doesn't exist; did you run the Qaurkus Gradle plugin "
+              File.separator
+                  + "my-app-runner.jar doesn't exist; did you run the Qaurkus Gradle plugin "
                   + "('quarkusBuild' task)?"));
     }
   }
