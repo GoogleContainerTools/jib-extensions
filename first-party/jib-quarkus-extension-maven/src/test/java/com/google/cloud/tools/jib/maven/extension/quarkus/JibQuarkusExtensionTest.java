@@ -160,7 +160,8 @@ public class JibQuarkusExtensionTest {
       assertThat(
           ex.getMessage(),
           endsWith(
-              "/my-app-runner.jar doesn't exist; did you run the Qaurkus Maven plugin "
+              File.separator
+                  + "my-app-runner.jar doesn't exist; did you run the Qaurkus Maven plugin "
                   + "('compile' and 'quarkus:build' Maven goals)?"));
     }
   }
