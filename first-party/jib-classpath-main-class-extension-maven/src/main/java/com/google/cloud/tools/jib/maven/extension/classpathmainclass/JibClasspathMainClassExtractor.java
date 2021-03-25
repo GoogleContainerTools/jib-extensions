@@ -28,7 +28,7 @@ public class JibClasspathMainClassExtractor {
   private static List<String> classpathOptions = Arrays.asList("-cp", "-classpath", "--class-path");
 
   static Map<String, String> extractEnvsFromEntrypoint(@Nullable List<String> entrypoint) {
-    if (entrypoint == null || entrypoint.size() == 0) {
+    if (entrypoint == null || entrypoint.size() <= 2) {
       return Collections.emptyMap();
     }
 
@@ -36,21 +36,19 @@ public class JibClasspathMainClassExtractor {
       return Collections.emptyMap();
     }
 
-    int i = entrypoint.size() - 1;
-    final String mainClass = entrypoint.get(i);
-    if (--i < 0) {
+    String classpathString = null;
+    for (int i = 1, n = entrypoint.size() - 2; i < n; i++) {
+      if (classpathOptions.contains(entrypoint.get(i))) {
+        classpathString = entrypoint.get(i + 1);
+        break;
+      }
+    }
+
+    if (classpathString == null) {
       return Collections.emptyMap();
     }
 
-    String classpathString = entrypoint.get(i);
-    if (--i < 0) {
-      return Collections.emptyMap();
-    }
-
-    if (!classpathOptions.contains(entrypoint.get(i))) {
-      return Collections.emptyMap();
-    }
-
+    String mainClass = entrypoint.get(entrypoint.size() - 1);
     Map<String, String> envs = new HashMap<>();
     envs.put("JIB_JAVA_CLASSPATH", classpathString);
     envs.put("JIB_JAVA_MAIN_CLASS", mainClass);
