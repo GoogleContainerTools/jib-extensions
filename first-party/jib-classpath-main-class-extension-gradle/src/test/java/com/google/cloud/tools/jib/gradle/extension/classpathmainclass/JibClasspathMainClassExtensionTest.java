@@ -16,36 +16,104 @@
 
 package com.google.cloud.tools.jib.gradle.extension.classpathmainclass;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotSame;
 
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
-import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.util.Arrays;
 import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests for {@link JibClasspathMainClassExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibClasspathMainClassExtensionTest {
 
-  @Mock private ExtensionLogger logger;
-
   @Test
-  public void testExtractClasspathMainClass_happy() throws JibPluginExtensionException {
+  public void testExtractClasspathMainClass_cp() throws JibPluginExtensionException {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder()
             .setEntrypoint(Arrays.asList("java", "-cp", "testcp", "main.class"))
             .build();
     ContainerBuildPlan newPlan =
         new JibClasspathMainClassExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, logger);
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
     assertNotSame(buildPlan, newPlan);
-    assertEquals("main.class", newPlan.getEnvironment().get("JIB_JAVA_MAIN_CLASS"));
-    assertEquals("testcp", newPlan.getEnvironment().get("JIB_JAVA_CLASSPATH"));
+    assertThat(newPlan.getEnvironment())
+        .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
+  }
+
+  @Test
+  public void testExtractClasspathMainClass_classpath() throws JibPluginExtensionException {
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder()
+            .setEntrypoint(Arrays.asList("java", "-classpath", "testcp", "main.class"))
+            .build();
+    ContainerBuildPlan newPlan =
+        new JibClasspathMainClassExtension()
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
+    assertNotSame(buildPlan, newPlan);
+    assertThat(newPlan.getEnvironment())
+        .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
+  }
+
+  @Test
+  public void testExtractClasspathMainClass_classPath() throws JibPluginExtensionException {
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder()
+            .setEntrypoint(Arrays.asList("java", "--class-path", "testcp", "main.class"))
+            .build();
+    ContainerBuildPlan newPlan =
+        new JibClasspathMainClassExtension()
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
+    assertNotSame(buildPlan, newPlan);
+    assertThat(newPlan.getEnvironment())
+        .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
+  }
+
+  @Test
+  public void testExtractClasspathMainClass_nullEntrypoint() throws JibPluginExtensionException {
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    ContainerBuildPlan newPlan =
+        new JibClasspathMainClassExtension()
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
+    assertThat(newPlan.getEnvironment()).isEmpty();
+  }
+
+  @Test
+  public void testExtractClasspathMainClass_firstCommandNotJava()
+      throws JibPluginExtensionException {
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder()
+            .setEntrypoint(Arrays.asList("/usr/local/java", "-cp", "testcp", "main.class"))
+            .build();
+    ContainerBuildPlan newPlan =
+        new JibClasspathMainClassExtension()
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
+    assertThat(newPlan.getEnvironment()).isEmpty();
+  }
+
+  @Test
+  public void testExtractClasspathMainClass_lengthLessThan4() throws JibPluginExtensionException {
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder().setEntrypoint(Arrays.asList("java", "-cp", "testcp")).build();
+    ContainerBuildPlan newPlan =
+        new JibClasspathMainClassExtension()
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
+    assertThat(newPlan.getEnvironment()).isEmpty();
+  }
+
+  @Test
+  public void testExtractClasspathMainClass_noClasspathOption() throws JibPluginExtensionException {
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder()
+            .setEntrypoint(Arrays.asList("java", "-foo", "-bar", "main.class"))
+            .build();
+    ContainerBuildPlan newPlan =
+        new JibClasspathMainClassExtension()
+            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
+    assertThat(newPlan.getEnvironment()).isEmpty();
   }
 }

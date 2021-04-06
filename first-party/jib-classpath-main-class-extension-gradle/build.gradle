@@ -6,11 +6,13 @@ plugins {
 
 dependencies {
   compileOnly "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.JIB_GRADLE_EXTENSION}"
-  compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+  compileOnly "com.google.guava:guava:${dependencyVersions.GUAVA}"
 
   testImplementation "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.JIB_GRADLE_EXTENSION}"
   testImplementation "junit:junit:${dependencyVersions.JUNIT}"
   testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
+  testImplementation "com.google.truth:truth:${dependencyVersions.TRUTH}"
+  testImplementation "com.google.truth.extensions:truth-java8-extension:${dependencyVersions.TRUTH8}"
 }
 
 
@@ -21,7 +23,7 @@ jar {
 
     // OSGi metadata
     attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.gradle.extension.classpathmainclass'
-    attributes 'Bundle-Name': 'Classpath and main class extractor for Jib Maven Plugin'
+    attributes 'Bundle-Name': 'Classpath and Main Class Extension for Jib Gradle Plugin'
     attributes 'Bundle-Vendor': 'Google LLC'
     attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'
     attributes 'Bundle-License': 'https://www.apache.org/licenses/LICENSE-2.0'
@@ -36,8 +38,8 @@ publishing {
   publications {
     mavenJava(MavenPublication) {
       pom {
-        name = 'Classpath and main class extractor for Jib Maven Plugin'
-        description = 'Extracts Java classpath and main class as environment variables.'
+        name = 'Classpath and Main Class Extension for Jib Gradle Plugin'
+        description = 'Enables extracting and handling Java classpath and main class in default image entrypoint.'
       }
       from components.java
     }
@@ -46,7 +48,7 @@ publishing {
 
 // Release plugin (git release commits and version updates)
 release {
-  tagTemplate = 'v$version-jib-layer-filter-extension-gradle'
+  tagTemplate = 'v$version-jib-classpath-main-class-extension-gradle'
   git {
     requireBranch = /^jib-classpath-main-class-extension-gradle-release-v\d+.*$/  //regex
   }

@@ -17,7 +17,6 @@
 package com.google.cloud.tools.jib.maven.extension.classpathmainclass;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,33 +24,29 @@ import javax.annotation.Nullable;
 
 public class JibClasspathMainClassExtractor {
 
-  private static List<String> classpathOptions = Arrays.asList("-cp", "-classpath", "--class-path");
+  private static final List<String> classpathOptions =
+      Arrays.asList("-cp", "-classpath", "--class-path");
 
   static Map<String, String> extractEnvsFromEntrypoint(@Nullable List<String> entrypoint) {
-    if (entrypoint == null || entrypoint.size() <= 2) {
-      return Collections.emptyMap();
-    }
-
-    if (!entrypoint.get(0).equals("java")) {
-      return Collections.emptyMap();
+    if (entrypoint == null || entrypoint.size() <= 3 || !"java".equals(entrypoint.get(0))) {
+      return new HashMap<>();
     }
 
     String classpathString = null;
-    for (int i = 1, n = entrypoint.size() - 2; i < n; i++) {
+    for (int i = 1; i < entrypoint.size() - 2; i++) {
       if (classpathOptions.contains(entrypoint.get(i))) {
         classpathString = entrypoint.get(i + 1);
         break;
       }
     }
-
     if (classpathString == null) {
-      return Collections.emptyMap();
+      return new HashMap<>();
     }
 
     String mainClass = entrypoint.get(entrypoint.size() - 1);
     Map<String, String> envs = new HashMap<>();
     envs.put("JIB_JAVA_CLASSPATH", classpathString);
     envs.put("JIB_JAVA_MAIN_CLASS", mainClass);
-    return Collections.unmodifiableMap(envs);
+    return envs;
   }
 }
