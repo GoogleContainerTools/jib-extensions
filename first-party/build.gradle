@@ -246,6 +246,11 @@ subprojects {
                 name = 'Appu Goundan'
                 email = 'appu@google.com'
               }
+              developer {
+                id = 'mpeddada1'
+                name = 'Mridula Peddada'
+                email = 'mpeddada@google.com'
+              }
             }
             scm {
               url = 'https://github.com/GoogleContainerTools/jib-extensions'
