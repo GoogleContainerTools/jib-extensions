@@ -1,0 +1,52 @@
+plugins {
+  id 'net.researchgate.release'
+  id 'maven-publish'
+}
+
+dependencies {
+  compileOnly "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_MAVEN_EXTENSION}"
+  compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+
+  testImplementation "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_GRADLE_EXTENSION}"
+  testImplementation "junit:junit:${dependencyVersions.JUNIT}"
+  testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Version': version
+    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.maven.extension.classpathmainclass'
+
+    // OSGi metadata
+    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.maven.extension.classpathmainclass'
+    attributes 'Bundle-Name': 'Classpath and main class extractor for Jib Maven Plugin'
+    attributes 'Bundle-Vendor': 'Google LLC'
+    attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'
+    attributes 'Bundle-License': 'https://www.apache.org/licenses/LICENSE-2.0'
+    attributes 'Export-Package': 'com.google.cloud.tools.jib.*'
+  }
+}
+
+/* RELEASE */
+configureMavenRelease()
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      pom {
+        name = 'Classpath and main class extractor for Jib Maven Plugin'
+        description = 'Extracts Java classpath and main class as environment variables.'
+      }
+      from components.java
+    }
+  }
+}
+
+// Release plugin (git release commits and version updates)
+release {
+  tagTemplate = 'v$version-jib--extension-maven'
+  git {
+    requireBranch = /^jib-classpath-main-class-extension-maven-release-v\d+.*$/  //regex
+  }
+}
+/* RELEASE */
