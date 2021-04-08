@@ -17,7 +17,6 @@
 package com.google.cloud.tools.jib.gradle.extension.classpathmainclass;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertNotSame;
 
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
@@ -40,7 +39,6 @@ public class JibClasspathMainClassExtensionTest {
     ContainerBuildPlan newPlan =
         new JibClasspathMainClassExtension()
             .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
-    assertNotSame(buildPlan, newPlan);
     assertThat(newPlan.getEnvironment())
         .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
   }
@@ -54,7 +52,6 @@ public class JibClasspathMainClassExtensionTest {
     ContainerBuildPlan newPlan =
         new JibClasspathMainClassExtension()
             .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
-    assertNotSame(buildPlan, newPlan);
     assertThat(newPlan.getEnvironment())
         .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
   }
@@ -68,7 +65,6 @@ public class JibClasspathMainClassExtensionTest {
     ContainerBuildPlan newPlan =
         new JibClasspathMainClassExtension()
             .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
-    assertNotSame(buildPlan, newPlan);
     assertThat(newPlan.getEnvironment())
         .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
   }
