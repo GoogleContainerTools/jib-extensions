@@ -17,6 +17,7 @@ The Jib Extension Framework enables anyone to easily extend Jib's behavior to th
    - [Gradle](#using-jib-plugin-extensions-gradle)
 - [Writing Your Own Extensions](#writing-your-own-extensions)
    - [Project Setup](#project-setup)
+   - [Using Dependency Injection (Maven)](#using-dependency-injection-maven)
    - [Updating Container Build Plan](#updating-container-build-plan)
    - [Defining Extension-Specific Configuration](#defining-extension-specific-configuration)
    - [Version Matrix](#version-matrix)
@@ -211,6 +212,24 @@ It is easy to write an extension! If you have written a useful extension, let us
    ```
 2. Add a text file `src/main/resources/META-INF/services/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension` (Maven) / `src/main/resources/META-INF/services/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension` (Gradle) and list your classes that implements the Jib Maven/Gradle Plugin Extension API below. See the [Maven](first-party/jib-ownership-extension-maven/src/main/resources/META-INF/services/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension) and [Gradle](first-party/jib-ownership-extension-gradle/src/main/resources/META-INF/services/com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension) examples.
 3. Implement [`JibMavenPluginExtension`](https://github.com/GoogleContainerTools/jib/blob/master/jib-maven-plugin-extension-api/src/main/java/com/google/cloud/tools/jib/maven/extension/JibMavenPluginExtension.java) (Maven) / [`JibGradlePluginExtension`](https://github.com/GoogleContainerTools/jib/blob/master/jib-gradle-plugin-extension-api/src/main/java/com/google/cloud/tools/jib/gradle/extension/JibGradlePluginExtension.java) (Gradle).
+
+### Using Dependency Injection (Maven)<a name="using-dependency-injection-maven"></a>
+
+The approach described above uses JDK service loader to create the instance of the extension. With Maven you can alternatively let your extension being created by the [Maven dependency injection container](https://maven.apache.org/maven-jsr330.html). This allows you to inject shared Maven components into you extension to perform more sophisticated tasks.
+
+1. Instead of `src/main/resources/META-INF/services/com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension`, create a text file `src/main/resources/META-INF/sisu/javax.inject.Named` and list your classes that implements the Jib Maven Plugin Extension API. Maven dependency injection container needs this file to find the classes to consider. See an example file in [`jib-layer-filter-extension-maven`](https://github.com/GoogleContainerTools/jib-extensions/blob/master/first-party/jib-layer-filter-extension-maven/src/main/resources/META-INF/sisu/javax.inject.Named). Alternatively you can use the [`sisu-maven-plugin`](https://www.eclipse.org/sisu/docs/api/org.eclipse.sisu.mojos/) to generate this file, as described in the [Maven documentation](https://maven.apache.org/maven-jsr330.html#how-to-use-jsr-330-in-plugins).
+
+2. Add the `@javax.inject.Named` and `@javax.inject.Singleton` annotations to your classes that implement the Jib Maven Plugin Extension API to make it Maven components. Use `javax.inject.Inject` annotation on fields, constructors or methods to get shared Maven components.
+
+```java
+@Named
+@Singleton
+public class MyExtension implements JibMavenPluginExtension<Configuration> {
+  
+  // example for injected shared Maven component
+  @Inject private ProjectDependenciesResolver dependencyResolver;
+}
+```
 
 ### Updating Container Build Plan
 

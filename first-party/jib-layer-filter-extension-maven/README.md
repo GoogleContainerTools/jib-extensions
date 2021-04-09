@@ -52,6 +52,8 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
             </filter>
           </filters>
         </configuration>
+        <!-- To create separate layers for parent dependencies-->
+        <createParentDependencyLayers>true</createParentDependencyLayers>
       </pluginExtension>
     </pluginExtensions>
   </configuration>
@@ -66,3 +68,11 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
 - You cannot move files into existing layers. You can only create new layers when moving files. If you see an error message "moving files into existing layer '...' is prohibited", it means you accidentally chose a conflicting name. Simply use a different `toLayer` name.
 - New layers are created in the order they appear in `filters`.
 - The extension does not create an empty layer when no files are matched.
+
+## Separate Layers for Parent Dependencies
+
+Setting `createParentDependencyLayers` to `true` will move all dependencies that come from the parent POM to separate layers with layer name suffixed by `-parent`.
+
+- This runs after the filtering. Hence, it also considers each `toLayer` that has been created.
+- The extension will never create an empty parent dependency layer.
+- If a layer contains only parent dependencies, it will be removed, since all its content will be moved to its corresponding parent dependency layer. 
