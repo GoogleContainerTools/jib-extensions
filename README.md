@@ -227,7 +227,7 @@ The approach described above uses JDK service loader to create the instance of t
 public class MyExtension implements JibMavenPluginExtension<Configuration> {
   
   // example for injected shared Maven component
-  @Inject ProjectDependenciesResolver dependencyResolver;
+  @Inject private ProjectDependenciesResolver dependencyResolver;
 }
 ```
 
