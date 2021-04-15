@@ -16,7 +16,7 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
     <dependency>
       <groupId>com.google.cloud.tools</groupId>
       <artifactId>jib-layer-filter-extension-maven</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
     </dependency>
   </dependencies>
 
