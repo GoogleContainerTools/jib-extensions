@@ -50,7 +50,7 @@ subprojects {
     JSR305: '3.0.2', // transitively pulled in by GUAVA
 
     JIB_CORE: '0.18.0',
-    JIB_GRADLE: '3.0.0',
+    JIB_GRADLE: '3.1.0',
 
     // for Build Plan and Jib Plugins Extension API
     JIB_GRADLE_EXTENSION: '0.4.0',
