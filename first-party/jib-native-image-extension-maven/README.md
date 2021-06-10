@@ -14,7 +14,7 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
 <plugin>
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>jib-maven-plugin</artifactId>
-  <version>3.1.0</version>
+  <version>3.1.1</version>
 
   <dependencies>
     <dependency>
