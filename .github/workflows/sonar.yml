@@ -31,14 +31,14 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar-${{ steps.date.outputs.date }}
       - uses: actions/cache@v2
-          with:
-            path: |
-              ~/.m2/repository
-              ~/.gradle/caches
-              ~/.gradle/wrapper
-            key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-            restore-keys: |
-              ${{ runner.os }}-gradle-
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: Test w/ coverage # Need this when the directory/pom structure changes
         id: install1
         continue-on-error: true
