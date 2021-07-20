@@ -39,7 +39,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Test w/ coverage # Need this when the directory/pom structure changes
+      - name: Test w/ coverage
         id: install1
         continue-on-error: true
         run: |
