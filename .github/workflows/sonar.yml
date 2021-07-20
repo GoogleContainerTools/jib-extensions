@@ -31,6 +31,7 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar-${{ steps.date.outputs.date }}
       - uses: actions/cache@v2
+          id: gradle-cache
           with:
             path: |
               ~/.m2/repository
@@ -55,7 +56,7 @@ jobs:
           cd first-party
           ./gradlew \
             sonarqube
-            --define sonar.projectKey=GoogleContainerTools_jib-extensions \
-            --define sonar.host.url=https://sonarcloud.io \
-            --define sonar.organization=googlecontainertools \
+            -Dsonar.projectKey=GoogleContainerTools_jib-extensions \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=googlecontainertools \
             --stacktrace
