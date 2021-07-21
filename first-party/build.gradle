@@ -297,10 +297,12 @@ subprojects {
   /* SONARQUBE */
   sonarqube {
     properties {
-      // properties defined in sonarqube command line
+      property 'sonar.projectKey', 'GoogleContainerTools_jib-extensions'
+      property 'sonar.host.url', 'https://sonarcloud.io'
+      property 'sonar.organization', 'googlecontainertools'
     }
   }
-  /* SONARQUBE */
+/* SONARQUBE */
 }
 
 /* LOCAL DEVELOPMENT HELPER TASKS */
