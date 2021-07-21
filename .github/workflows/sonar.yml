@@ -2,7 +2,7 @@ name: SonarCloud Analysis
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Get current date
-        id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d' --utc)"
       - uses: actions/checkout@v2
         with:
@@ -40,13 +39,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Test w/ coverage
-        id: install1
         continue-on-error: true
         run: |
           cd first-party
           ./gradlew clean build jacocoTestReport --stacktrace
       - name: Build and analyze
-        id: sonar1
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
