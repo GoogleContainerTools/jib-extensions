@@ -51,4 +51,4 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           cd first-party
-          ./gradlew sonarqube -Dsonar.projectKey=GoogleContainerTools_jib-extensions -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=googlecontainertools --stacktrace
+          ./gradlew sonarqube --stacktrace
