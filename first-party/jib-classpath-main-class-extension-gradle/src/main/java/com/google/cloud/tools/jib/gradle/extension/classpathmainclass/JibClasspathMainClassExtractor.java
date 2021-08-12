@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 
 public class JibClasspathMainClassExtractor {
 
+  private JibClasspathMainClassExtractor() {}
+
   private static final List<String> classpathOptions =
       Arrays.asList("-cp", "-classpath", "--class-path");
 
