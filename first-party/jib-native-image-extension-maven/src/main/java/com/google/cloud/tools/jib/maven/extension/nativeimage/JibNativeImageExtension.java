@@ -56,6 +56,8 @@ public class JibNativeImageExtension implements JibMavenPluginExtension<Void> {
           ValueContainer.CONFIGURATION,
           new String[] {"container", "entrypoint"});
 
+  private static final String MAIN_CLASS = "mainClass";
+
   // If <imageName> is not specified, then native-image uses the mainClass name as the executable.
   // If <mainClass> is not specified, then native-image-maven-plugin looks at the configurations
   // for a set of other well-known plugins.
@@ -71,19 +73,19 @@ public class JibNativeImageExtension implements JibMavenPluginExtension<Void> {
           new ConfigValueLocation(
               "org.graalvm.nativeimage:native-image-maven-plugin",
               ValueContainer.CONFIGURATION,
-              new String[] {"mainClass"}),
+              new String[] {MAIN_CLASS}),
           new ConfigValueLocation(
               "org.apache.maven.plugins:maven-shade-plugin",
               ValueContainer.EXECUTIONS,
-              new String[] {"transformers", "transformer", "mainClass"}),
+              new String[] {"transformers", "transformer", MAIN_CLASS}),
           new ConfigValueLocation(
               "org.apache.maven.plugins:maven-assembly-plugin",
               ValueContainer.CONFIGURATION,
-              new String[] {"archive", "manifest", "mainClass"}),
+              new String[] {"archive", "manifest", MAIN_CLASS}),
           new ConfigValueLocation(
               "org.apache.maven.plugins:maven-jar-plugin",
               ValueContainer.CONFIGURATION,
-              new String[] {"archive", "manifest", "mainClass"}));
+              new String[] {"archive", "manifest", MAIN_CLASS}));
 
   @Override
   public Optional<Class<Void>> getExtraConfigType() {
