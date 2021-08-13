@@ -69,6 +69,7 @@ subprojects {
     MOCKITO_CORE: '3.6.28',
     SLF4J_API: '1.7.30',
     SYSTEM_RULES: '1.19.0',
+    JUNIT_PARAMS: '1.1.1',
   ]
   /* PROJECT DEPENDENCY VERSIONS */
 

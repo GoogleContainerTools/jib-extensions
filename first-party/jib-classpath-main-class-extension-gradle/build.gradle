@@ -13,6 +13,7 @@ dependencies {
   testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
   testImplementation "com.google.truth:truth:${dependencyVersions.TRUTH}"
   testImplementation "com.google.truth.extensions:truth-java8-extension:${dependencyVersions.TRUTH8}"
+  testImplementation "pl.pragmatists:JUnitParams:${dependencyVersions.JUNIT_PARAMS}"
 }
 
 

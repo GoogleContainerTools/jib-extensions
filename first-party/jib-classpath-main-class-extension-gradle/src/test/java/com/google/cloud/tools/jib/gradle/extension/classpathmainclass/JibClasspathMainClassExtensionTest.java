@@ -22,45 +22,26 @@ import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.util.Arrays;
 import java.util.Optional;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 /** Tests for {@link JibClasspathMainClassExtension}. */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(JUnitParamsRunner.class)
 public class JibClasspathMainClassExtensionTest {
 
-  @Test
-  public void testExtractClasspathMainClass_cp() throws JibPluginExtensionException {
-    ContainerBuildPlan buildPlan =
-        ContainerBuildPlan.builder()
-            .setEntrypoint(Arrays.asList("java", "-cp", "testcp", "main.class"))
-            .build();
-    ContainerBuildPlan newPlan =
-        new JibClasspathMainClassExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
-    assertThat(newPlan.getEnvironment())
-        .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
+  private Object classpaths() {
+    return new Object[] {"-cp", "-classpath", "--class-path"};
   }
 
   @Test
-  public void testExtractClasspathMainClass_classpath() throws JibPluginExtensionException {
+  @Parameters(method = "classpaths")
+  public void testExtractClasspathMainClass_cp(String classpathFlag)
+      throws JibPluginExtensionException {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder()
-            .setEntrypoint(Arrays.asList("java", "-classpath", "testcp", "main.class"))
-            .build();
-    ContainerBuildPlan newPlan =
-        new JibClasspathMainClassExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), null, null);
-    assertThat(newPlan.getEnvironment())
-        .containsExactly("JIB_JAVA_MAIN_CLASS", "main.class", "JIB_JAVA_CLASSPATH", "testcp");
-  }
-
-  @Test
-  public void testExtractClasspathMainClass_classPath() throws JibPluginExtensionException {
-    ContainerBuildPlan buildPlan =
-        ContainerBuildPlan.builder()
-            .setEntrypoint(Arrays.asList("java", "--class-path", "testcp", "main.class"))
+            .setEntrypoint(Arrays.asList("java", classpathFlag, "testcp", "main.class"))
             .build();
     ContainerBuildPlan newPlan =
         new JibClasspathMainClassExtension()
