@@ -261,9 +261,8 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       pathMatchers.put(
           FileSystems.getDefault().getPathMatcher("glob:" + filter.getGlob()), filter.getToLayer());
 
-      if (!newToLayers.containsKey(toLayerName)) {
-        newToLayers.put(toLayerName, FileEntriesLayer.builder().setName(toLayerName));
-      }
+      newToLayers.computeIfAbsent(
+          toLayerName, layerName -> FileEntriesLayer.builder().setName(layerName));
     }
   }
 
