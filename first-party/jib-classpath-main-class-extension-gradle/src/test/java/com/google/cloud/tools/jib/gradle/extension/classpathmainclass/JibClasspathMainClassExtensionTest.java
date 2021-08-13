@@ -31,8 +31,8 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class JibClasspathMainClassExtensionTest {
 
-  private Object classpaths() {
-    return new Object[] {"-cp", "-classpath", "--class-path"};
+  private String[] classpaths() {
+    return new String[] {"-cp", "-classpath", "--class-path"};
   }
 
   @Test
