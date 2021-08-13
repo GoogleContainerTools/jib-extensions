@@ -37,7 +37,7 @@ public class JibClasspathMainClassExtensionTest {
 
   @Test
   @Parameters(method = "classpaths")
-  public void testExtractClasspathMainClass_cp(String classpathFlag)
+  public void testExtractClasspathMainClass(String classpathFlag)
       throws JibPluginExtensionException {
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder()
