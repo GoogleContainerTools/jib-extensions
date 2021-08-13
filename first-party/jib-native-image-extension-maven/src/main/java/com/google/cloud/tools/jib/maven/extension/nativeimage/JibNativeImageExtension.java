@@ -189,7 +189,7 @@ public class JibNativeImageExtension implements JibMavenPluginExtension<Void> {
             .findFirst();
 
       default:
-        throw new RuntimeException("unknown enum value: " + location.valueContainer);
+        throw new IllegalArgumentException("unknown enum value: " + location.valueContainer);
     }
   }
 
