@@ -16,7 +16,7 @@ Note that `<container><mainClass>` should be set to some placeholder value to su
 <plugin>
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>jib-maven-plugin</artifactId>
-  <version>3.1.3</version>
+  <version>3.1.4</version>
 
   <dependencies>
     <dependency>
