@@ -59,7 +59,7 @@ subprojects {
     JIB_GRADLE_EXTENSION: 'com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0',
     JIB_MAVEN_EXTENSION: 'com.google.cloud.tools:jib-maven-plugin-extension-api:0.4.0',
 
-    SPRING_BOOT: '2.3.1.RELEASE', // for Spring Boot Gradle extension
+    SPRING_BOOT: 'org.springframework.boot:spring-boot-gradle-plugin:2.3.1.RELEASE', // for Spring Boot Gradle extension
     MAVEN_API: 'org.apache.maven:maven-plugin-api:3.8.2',
 
     //test
