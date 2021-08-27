@@ -4,15 +4,15 @@ plugins {
 }
 
 dependencies {
-  compileOnly "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_MAVEN_EXTENSION}"
-  compileOnly "com.google.guava:guava:${dependencyVersions.GUAVA}"
+  compileOnly dependencyStrings.JIB_MAVEN_EXTENSION
+  compileOnly dependencyStrings.GUAVA
 
-  testImplementation "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_MAVEN_EXTENSION}"
-  testImplementation "junit:junit:${dependencyVersions.JUNIT}"
-  testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
-  testImplementation "com.google.truth:truth:${dependencyVersions.TRUTH}"
-  testImplementation "com.google.truth.extensions:truth-java8-extension:${dependencyVersions.TRUTH8}"
-  testImplementation "pl.pragmatists:JUnitParams:${dependencyVersions.JUNIT_PARAMS}"
+  testImplementation dependencyStrings.JIB_MAVEN_EXTENSION
+  testImplementation dependencyStrings.JUNIT
+  testImplementation dependencyStrings.MOCKITO_CORE
+  testImplementation dependencyStrings.TRUTH
+  testImplementation dependencyStrings.TRUTH8
+  testImplementation dependencyStrings.JUNIT_PARAMS
 }
 
 jar {
