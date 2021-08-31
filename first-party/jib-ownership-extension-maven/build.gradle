@@ -4,11 +4,11 @@ plugins {
 }
 
 dependencies {
-  compileOnly "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_MAVEN_EXTENSION}"
+  compileOnly dependencyStrings.JIB_MAVEN_EXTENSION
 
-  testImplementation "com.google.cloud.tools:jib-maven-plugin-extension-api:${dependencyVersions.JIB_MAVEN_EXTENSION}"
-  testImplementation "junit:junit:${dependencyVersions.JUNIT}"
-  testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
+  testImplementation dependencyStrings.JIB_MAVEN_EXTENSION
+  testImplementation dependencyStrings.JUNIT
+  testImplementation dependencyStrings.MOCKITO_CORE
 }
 
 jar {

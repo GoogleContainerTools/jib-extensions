@@ -9,15 +9,15 @@ repositories {
 }
 
 dependencies {
-  compileOnly "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.JIB_GRADLE_EXTENSION}"
-  compileOnly "gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:${dependencyVersions.JIB_GRADLE}"
-  compileOnly "com.google.guava:guava:${dependencyVersions.GUAVA}"
+  compileOnly dependencyStrings.JIB_GRADLE_EXTENSION
+  compileOnly dependencyStrings.JIB_GRADLE
+  compileOnly dependencyStrings.GUAVA
 
-  testImplementation "com.google.cloud.tools:jib-gradle-plugin-extension-api:${dependencyVersions.JIB_GRADLE_EXTENSION}"
-  testImplementation "gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:${dependencyVersions.JIB_GRADLE}"
-  testImplementation "com.google.guava:guava:${dependencyVersions.GUAVA}"
-  testImplementation "junit:junit:${dependencyVersions.JUNIT}"
-  testImplementation "org.mockito:mockito-core:${dependencyVersions.MOCKITO_CORE}"
+  testImplementation dependencyStrings.JIB_GRADLE_EXTENSION
+  testImplementation dependencyStrings.JIB_GRADLE
+  testImplementation dependencyStrings.GUAVA
+  testImplementation dependencyStrings.JUNIT
+  testImplementation dependencyStrings.MOCKITO_CORE
 }
 
 jar {
