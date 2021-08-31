@@ -1,0 +1,59 @@
+name: Prepare Jib extension release
+on:
+  workflow_dispatch:
+    inputs:
+      jib_extension:
+        description: Jib extension to release
+        required: true
+        default: (jib-layer-filter-extension-gradle | ...)
+      release_version:
+        description: new release version
+        required: true
+        default: (for example, 0.2.0)
+
+jobs:
+  release:
+    name: Prepare Jib extension release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+
+      - name: Check input
+        run: |
+          echo '* input Jib extension: "${{ github.event.inputs.jib_extension }}"'
+
+          if [[ ! "${{ github.event.inputs.release_version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'version "${{ github.event.inputs.release_version }}" not in ###.###.### format'
+            exit 1
+          fi
+
+      - name: Build Jib extension
+        run: |
+          cd first-party
+          ./gradlew clean ${{ github.event.inputs.jib_extension }}:integrationTest --stacktrace
+
+      - name: Run Gradle release
+        run: |
+          git checkout -b ${{ github.event.inputs.jib_extension }}-release-v${{ github.event.inputs.release_version }}
+          git config user.email ${{ github.actor }}@users.noreply.github.com
+          git config user.name ${{ github.actor }}
+
+          cd first-party
+          # This creates the tag (e.g., "v0.2.0-jib-layer-filter-extension-gradle") and pushes the updated
+          # branch (e.g., "jib-layer-filter-extension-gradle-v0.2.0") and the new tag.
+          ./gradlew ${{ github.event.inputs.jib_extension }}:release \
+            -Prelease.useAutomaticVersion=true \
+            -Prelease.releaseVersion=${{ github.event.inputs.release_version }}
+
+      - name: Create pull request
+        uses: repo-sync/pull-request@v2.6
+        id: create-pr
+        with:
+          # Use a personal token to file a PR as a non-bot author to trigger other workflows (e.g., unit tests):
+          # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#triggering-new-workflows-using-a-personal-access-token;
+          github_token: ${{ secrets.GA_RELEASE_PR_PERSONAL_TOKEN }}
+          source_branch: ${{ github.event.inputs.jib_extension }}-release-v${{ github.event.inputs.release_version }}
+          pr_title: "${{ github.event.inputs.jib_extension }} release v${{ github.event.inputs.release_version }}"
+          pr_body: "To be merged after the release is complete."
+          pr_label: "PR: Merge After Release"
