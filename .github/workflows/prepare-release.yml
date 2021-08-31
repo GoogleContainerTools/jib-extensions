@@ -30,6 +30,7 @@ jobs:
 
       - name: Build Jib extension
         run: |
+          cd first-party
           ./gradlew clean ${{ github.event.inputs.jib_extension }}:integrationTest --stacktrace
 
       - name: Run Gradle release
@@ -38,6 +39,7 @@ jobs:
           git config user.email ${{ github.actor }}@users.noreply.github.com
           git config user.name ${{ github.actor }}
 
+          cd first-party
           # This creates the tag (e.g., "v0.1.0-jib-layer-filter-extension-gradle") and pushes the updated
           # branch (e.g., "jib-layer-filter-extension-gradle-v0.1.0") and the new tag.
           ./gradlew ${{ github.event.inputs.jib_extension }}:release \
