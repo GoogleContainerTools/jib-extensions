@@ -40,8 +40,8 @@ jobs:
           git config user.name ${{ github.actor }}
 
           cd first-party
-          # This creates the tag (e.g., "v0.1.0-jib-layer-filter-extension-gradle") and pushes the updated
-          # branch (e.g., "jib-layer-filter-extension-gradle-v0.1.0") and the new tag.
+          # This creates the tag (e.g., "v0.2.0-jib-layer-filter-extension-gradle") and pushes the updated
+          # branch (e.g., "jib-layer-filter-extension-gradle-v0.2.0") and the new tag.
           ./gradlew ${{ github.event.inputs.jib_extension }}:release \
             -Prelease.useAutomaticVersion=true \
             -Prelease.releaseVersion=${{ github.event.inputs.release_version }}
