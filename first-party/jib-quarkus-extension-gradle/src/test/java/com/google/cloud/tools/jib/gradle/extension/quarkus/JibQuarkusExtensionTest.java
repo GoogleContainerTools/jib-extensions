@@ -88,9 +88,7 @@ public class JibQuarkusExtensionTest {
   }
 
   private static List<String> layerToExtractionPaths(FileEntriesLayer layer) {
-    return layer
-        .getEntries()
-        .stream()
+    return layer.getEntries().stream()
         .map(layerEntry -> layerEntry.getExtractionPath().toString())
         .collect(Collectors.toList());
   }

@@ -97,9 +97,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
 
       // Preserve extra directories layers.
       String extraFilesLayerName = JavaContainerBuilder.LayerType.EXTRA_FILES.getName();
-      buildPlan
-          .getLayers()
-          .stream()
+      buildPlan.getLayers().stream()
           .filter(layer -> layer.getName().startsWith(extraFilesLayerName))
           .forEach(planBuilder::addLayer);
 
@@ -123,9 +121,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
       throws IOException {
     // Collect all artifact files involved in this Maven session.
     Set<String> projectArtifactFilenames =
-        session
-            .getProjects()
-            .stream()
+        session.getProjects().stream()
             .map(MavenProject::getArtifact)
             .map(Artifact::getFile)
             .filter(Objects::nonNull) // excludes root POM project
@@ -134,8 +130,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
 
     Predicate<Path> isProjectDependency =
         path ->
-            projectArtifactFilenames
-                .stream()
+            projectArtifactFilenames.stream()
                 // endsWith: Quarkus prepends group ID to the augmented JARs in target/lib.
                 .anyMatch(jarFilename -> path.getFileName().toString().endsWith(jarFilename));
     Predicate<Path> isSnapshot =
@@ -186,8 +181,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
           Xpp3Dom jvmFlagsDom = containerDom.getChild("jvmFlags");
           if (jvmFlagsDom != null) {
             jvmFlags =
-                Arrays.asList(jvmFlagsDom.getChildren())
-                    .stream()
+                Arrays.asList(jvmFlagsDom.getChildren()).stream()
                     .map(Xpp3Dom::getValue)
                     .collect(Collectors.toList());
           }

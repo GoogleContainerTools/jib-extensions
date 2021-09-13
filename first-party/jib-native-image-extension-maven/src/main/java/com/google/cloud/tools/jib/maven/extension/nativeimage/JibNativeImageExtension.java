@@ -134,9 +134,7 @@ public class JibNativeImageExtension implements JibMavenPluginExtension<Void> {
 
     // Preserve extra directories layers.
     String extraFilesLayerName = JavaContainerBuilder.LayerType.EXTRA_FILES.getName();
-    buildPlan
-        .getLayers()
-        .stream()
+    buildPlan.getLayers().stream()
         .filter(layer -> layer.getName().startsWith(extraFilesLayerName))
         .forEach(planBuilder::addLayer);
 
@@ -159,8 +157,7 @@ public class JibNativeImageExtension implements JibMavenPluginExtension<Void> {
       return imageName;
     }
 
-    return MAIN_CLASS_LOCATIONS
-        .stream()
+    return MAIN_CLASS_LOCATIONS.stream()
         .map(location -> getPluginConfigValue(project, location))
         .filter(Optional::isPresent)
         .map(Optional::get)
@@ -180,9 +177,7 @@ public class JibNativeImageExtension implements JibMavenPluginExtension<Void> {
         return getDomValue((Xpp3Dom) plugin.getConfiguration(), location.domPath);
 
       case EXECUTIONS:
-        return plugin
-            .getExecutions()
-            .stream()
+        return plugin.getExecutions().stream()
             .map(execution -> getDomValue((Xpp3Dom) execution.getConfiguration(), location.domPath))
             .filter(Optional::isPresent)
             .map(Optional::get)

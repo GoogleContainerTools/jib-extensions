@@ -63,9 +63,7 @@ public class JibSpringBootExtension implements JibGradlePluginExtension<Void> {
     logger.log(LogLevel.INFO, "Removing spring-boot-devtools (if any)");
 
     List<LayerObject> newLayers =
-        buildPlan
-            .getLayers()
-            .stream()
+        buildPlan.getLayers().stream()
             .map(JibSpringBootExtension::filterOutDevtools)
             .collect(Collectors.toList());
     return buildPlan.toBuilder().setLayers(newLayers).build();

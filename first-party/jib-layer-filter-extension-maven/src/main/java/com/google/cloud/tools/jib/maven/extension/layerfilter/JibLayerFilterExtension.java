@@ -111,9 +111,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     }
 
     // Add newly created non-empty to-layers (if any).
-    newToLayers
-        .values()
-        .stream()
+    newToLayers.values().stream()
         .map(FileEntriesLayer.Builder::build)
         .filter(layer -> !layer.getEntries().isEmpty())
         .forEach(newPlanBuilder::addLayer);
@@ -133,8 +131,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     // The key is the source file path for the parent dependency. We only consider artifacts that
     // have been resolved.
     Map<Path, Artifact> parentDependencies =
-        getParentDependencies(mavenData)
-            .stream()
+        getParentDependencies(mavenData).stream()
             .map(Dependency::getArtifact)
             .filter(artifact -> artifact.getFile() != null)
             .collect(
@@ -178,8 +175,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     logMissingParentDependencies(logger, parentDependenciesNotFound, originalLayers);
 
     List<FileEntriesLayer> newLayers =
-        newLayerBuilders
-            .stream()
+        newLayerBuilders.stream()
             .map(FileEntriesLayer.Builder::build)
             .filter(layer -> !layer.getEntries().isEmpty())
             .collect(Collectors.toList());
@@ -222,8 +218,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
         (filePath, artifact) -> {
           logger.log(LogLevel.INFO, "Dependency from parent not found: " + filePath);
           String potentialMatches =
-              originalLayers
-                  .stream()
+              originalLayers.stream()
                   .flatMap(layer -> layer.getEntries().stream())
                   .map(FileEntry::getSourceFile)
                   .filter(
