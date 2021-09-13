@@ -96,9 +96,7 @@ public class JibLayerFilterExtension implements JibGradlePluginExtension<Configu
     }
 
     // Add newly created non-empty to-layers (if any).
-    newToLayers
-        .values()
-        .stream()
+    newToLayers.values().stream()
         .map(FileEntriesLayer.Builder::build)
         .filter(layer -> !layer.getEntries().isEmpty())
         .forEach(newPlanBuilder::addLayer);

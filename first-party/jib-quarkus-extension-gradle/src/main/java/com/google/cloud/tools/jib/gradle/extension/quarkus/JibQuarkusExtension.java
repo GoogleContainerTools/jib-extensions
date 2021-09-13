@@ -94,9 +94,7 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
 
       // Preserve extra directories layers.
       String extraFilesLayerName = JavaContainerBuilder.LayerType.EXTRA_FILES.getName();
-      buildPlan
-          .getLayers()
-          .stream()
+      buildPlan.getLayers().stream()
           .filter(layer -> layer.getName().startsWith(extraFilesLayerName))
           .forEach(planBuilder::addLayer);
 
@@ -119,12 +117,8 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
       Project project, ContainerBuildPlan.Builder planBuilder, Path libDirectory)
       throws IOException {
     List<String> projectDependencyFilenames =
-        project
-            .getConfigurations()
-            .getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
-            .getResolvedConfiguration()
-            .getResolvedArtifacts()
-            .stream()
+        project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+            .getResolvedConfiguration().getResolvedArtifacts().stream()
             .filter(
                 artifact ->
                     artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier)
@@ -134,8 +128,7 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
 
     Predicate<Path> isProjectDependency =
         path ->
-            projectDependencyFilenames
-                .stream()
+            projectDependencyFilenames.stream()
                 // endsWith: Quarkus prepends group ID to the augmented JARs in target/lib.
                 .anyMatch(jarFilename -> path.getFileName().toString().endsWith(jarFilename));
     Predicate<Path> isSnapshot =
