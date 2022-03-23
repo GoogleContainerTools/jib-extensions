@@ -239,7 +239,7 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
     List<String> originalLayerNames =
         buildPlan.getLayers().stream().map(LayerObject::getName).collect(Collectors.toList());
 
-    newToLayers.clear();  //ensure empty (in case previously built module already populated it)
+    newToLayers.clear(); // ensure empty (in case previously built module already populated it)
     for (Configuration.Filter filter : config.getFilters()) {
       String toLayerName = filter.getToLayer();
       if (!toLayerName.isEmpty() && originalLayerNames.contains(toLayerName)) {
