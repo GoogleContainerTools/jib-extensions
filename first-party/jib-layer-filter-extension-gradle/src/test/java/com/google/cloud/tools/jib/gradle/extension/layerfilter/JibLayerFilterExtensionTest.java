@@ -292,23 +292,23 @@ public class JibLayerFilterExtensionTest {
 
   @Test
   public void testExtendContainerBuildPlan_multipleModulesBuild()
-          throws JibPluginExtensionException {
+      throws JibPluginExtensionException {
     JibLayerFilterExtension filterExtension =
-            new JibLayerFilterExtension(); // same instance used twice
+        new JibLayerFilterExtension(); // same instance used twice
 
     Configuration.Filter filterFoo = mockFilter("**/foo/**", "foo");
     Configuration.Filter filterBar = mockFilter("**/bar/**", "bar");
     when(config.getFilters()).thenReturn(Arrays.asList(filterFoo, filterBar));
 
     ContainerBuildPlan buildPlanM1 =
-            ContainerBuildPlan.builder()
-                    .addLayer(buildLayer("m1l1", Arrays.asList("/m1/foo/a")))
-                    .addLayer(buildLayer("m1l2", Arrays.asList("/m1/foo/b", "/m1/bar/c")))
-                    .build();
+        ContainerBuildPlan.builder()
+            .addLayer(buildLayer("m1l1", Arrays.asList("/m1/foo/a")))
+            .addLayer(buildLayer("m1l2", Arrays.asList("/m1/foo/b", "/m1/bar/c")))
+            .build();
 
     ContainerBuildPlan newPlanM1 =
-            filterExtension.extendContainerBuildPlan(
-                    buildPlanM1, null, Optional.of(config), null, logger);
+        filterExtension.extendContainerBuildPlan(
+            buildPlanM1, null, Optional.of(config), null, logger);
 
     assertEquals(2, newPlanM1.getLayers().size());
     FileEntriesLayer newLayer1M1 = (FileEntriesLayer) newPlanM1.getLayers().get(0);
@@ -316,19 +316,19 @@ public class JibLayerFilterExtensionTest {
     assertEquals("foo", newLayer1M1.getName());
     assertEquals("bar", newLayer2M1.getName());
     assertEquals(
-            buildLayer("", Arrays.asList("/m1/foo/a", "/m1/foo/b")).getEntries(),
-            newLayer1M1.getEntries());
+        buildLayer("", Arrays.asList("/m1/foo/a", "/m1/foo/b")).getEntries(),
+        newLayer1M1.getEntries());
     assertEquals(buildLayer("", Arrays.asList("/m1/bar/c")).getEntries(), newLayer2M1.getEntries());
 
     ContainerBuildPlan buildPlanM2 =
-            ContainerBuildPlan.builder()
-                    .addLayer(buildLayer("m2l1", Arrays.asList("/m2/foo/a", "/m2/bar/b")))
-                    .addLayer(buildLayer("m2l2", Arrays.asList("/m2/foo/c")))
-                    .build();
+        ContainerBuildPlan.builder()
+            .addLayer(buildLayer("m2l1", Arrays.asList("/m2/foo/a", "/m2/bar/b")))
+            .addLayer(buildLayer("m2l2", Arrays.asList("/m2/foo/c")))
+            .build();
 
     ContainerBuildPlan newPlanM2 =
-            filterExtension.extendContainerBuildPlan(
-                    buildPlanM2, null, Optional.of(config), null, logger);
+        filterExtension.extendContainerBuildPlan(
+            buildPlanM2, null, Optional.of(config), null, logger);
 
     assertEquals(2, newPlanM1.getLayers().size());
     FileEntriesLayer newLayer1M2 = (FileEntriesLayer) newPlanM2.getLayers().get(0);
@@ -336,8 +336,8 @@ public class JibLayerFilterExtensionTest {
     assertEquals("foo", newLayer1M2.getName());
     assertEquals("bar", newLayer2M2.getName());
     assertEquals(
-            buildLayer("", Arrays.asList("/m2/foo/a", "/m2/foo/c")).getEntries(),
-            newLayer1M2.getEntries());
+        buildLayer("", Arrays.asList("/m2/foo/a", "/m2/foo/c")).getEntries(),
+        newLayer1M2.getEntries());
     assertEquals(buildLayer("", Arrays.asList("/m2/bar/b")).getEntries(), newLayer2M2.getEntries());
   }
 }
