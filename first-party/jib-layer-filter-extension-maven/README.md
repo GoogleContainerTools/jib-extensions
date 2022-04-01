@@ -10,13 +10,13 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
 <plugin>
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>jib-maven-plugin</artifactId>
-  <version>3.2.0</version>
+  <version>3.2.1</version>
 
   <dependencies>
     <dependency>
       <groupId>com.google.cloud.tools</groupId>
       <artifactId>jib-layer-filter-extension-maven</artifactId>
-      <version>0.2.0</version>
+      <version>0.3.0</version>
     </dependency>
   </dependencies>
 
