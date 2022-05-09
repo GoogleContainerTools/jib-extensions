@@ -4,13 +4,18 @@ plugins {
   id 'maven-publish'
 }
 
+repositories {
+  gradlePluginPortal()
+}
+
 dependencies {
   compileOnly dependencyStrings.JIB_GRADLE_EXTENSION
-  compileOnly dependencyStrings.JIB_CORE
-  compileOnly dependencyStrings.JSR305
+  compileOnly dependencyStrings.JIB_GRADLE
+  compileOnly dependencyStrings.GUAVA
 
   testImplementation dependencyStrings.JIB_GRADLE_EXTENSION
-  testImplementation dependencyStrings.JIB_CORE
+  testImplementation dependencyStrings.JIB_GRADLE
+  testImplementation dependencyStrings.GUAVA
   testImplementation dependencyStrings.JUNIT
   testImplementation dependencyStrings.MOCKITO_CORE
 }

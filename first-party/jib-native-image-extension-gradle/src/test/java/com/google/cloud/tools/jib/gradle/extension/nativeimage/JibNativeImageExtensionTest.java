@@ -18,6 +18,7 @@ package com.google.cloud.tools.jib.gradle.extension.nativeimage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
@@ -25,6 +26,8 @@ import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan;
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.api.buildplan.FileEntry;
 import com.google.cloud.tools.jib.api.buildplan.FilePermissions;
+import com.google.cloud.tools.jib.gradle.ContainerParameters;
+import com.google.cloud.tools.jib.gradle.JibExtension;
 import com.google.cloud.tools.jib.gradle.extension.GradleData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
@@ -33,38 +36,42 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.plugins.ExtensionContainer;
-import org.gradle.api.tasks.TaskContainer;
-import org.gradle.jvm.tasks.Jar;
+import org.gradle.internal.extensibility.DefaultConvention;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests for {@link JibNativeImageExtension}. */
+/**
+ * Tests for {@link JibNativeImageExtension}.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class JibNativeImageExtensionTest {
 
-  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
+  @Rule
+  public final TemporaryFolder tempFolder = new TemporaryFolder();
 
-  @Mock private ExtensionLogger logger;
+  @Mock
+  private ExtensionLogger logger;
 
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+  @Mock
+  private DefaultConvention defaultConvention;
+
+  @Mock
   private Project project;
-
   private final GradleData gradleData = () -> project;
+  @Mock
+  private JibExtension jibPlugin;
+  @Mock
+  private ContainerParameters jibContainer;
 
   private static FileEntriesLayer buildLayer(String layerName, Path... paths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
@@ -80,18 +87,74 @@ public class JibNativeImageExtensionTest {
         .collect(Collectors.toList());
   }
 
+  @Before
+  public void setUp() {
+    when(project.getExtensions()).thenReturn(defaultConvention);
+    when(project.getExtensions().findByType(JibExtension.class)).thenReturn(jibPlugin);
+    when(jibPlugin.getContainer()).thenReturn(jibContainer);
+
+    when(project.getBuildDir()).thenReturn(tempFolder.getRoot());
+  }
+
+  @Test
+  public void testGetExecutableName_property() {
+    Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
+    assertEquals(
+        Optional.of("theExecutable"),
+        JibNativeImageExtension.getExecutableName(jibContainer, properties));
+  }
+
   @Test
   public void testEntrypoint() throws JibPluginExtensionException, IOException {
     Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
-    tempFolder.newFile("theExecutable");
+    tempFolder.newFolder("native/nativeCompile");
+    tempFolder.newFile("native/nativeCompile/theExecutable");
 
     ContainerBuildPlan buildPlan =
-        ContainerBuildPlan.builder().setEntrypoint(Arrays.asList("to be overwritten")).build();
+        ContainerBuildPlan.builder().setEntrypoint(Collections.singletonList("to be overwritten")).build();
     ContainerBuildPlan newPlan =
         new JibNativeImageExtension()
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
-    assertEquals(Arrays.asList("/app/theExecutable"), newPlan.getEntrypoint());
+    assertEquals(Collections.singletonList("/app/theExecutable"), newPlan.getEntrypoint());
+  }
+
+  @Test
+  public void testEntrypoint_setByJib() throws JibPluginExtensionException, IOException {
+    Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
+    tempFolder.newFolder("native/nativeCompile/");
+    tempFolder.newFile("native/nativeCompile/theExecutable");
+
+    when(jibContainer.getEntrypoint()).thenReturn(Collections.singletonList("non-empty"));
+
+
+    ContainerBuildPlan buildPlan =
+        ContainerBuildPlan.builder().setEntrypoint(Collections.singletonList("set by Jib")).build();
+    ContainerBuildPlan newPlan =
+        new JibNativeImageExtension()
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
+
+    assertEquals(Collections.singletonList("set by Jib"), newPlan.getEntrypoint());
+  }
+
+  @Test
+  public void testAppRoot() throws JibPluginExtensionException, IOException {
+    Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
+    tempFolder.newFolder("native/nativeCompile/");
+    tempFolder.newFile("native/nativeCompile/theExecutable");
+
+    when(jibContainer.getAppRoot()).thenReturn("/new/root");
+
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    ContainerBuildPlan newPlan =
+        new JibNativeImageExtension()
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
+
+    assertEquals(Arrays.asList("/new/root/theExecutable"), newPlan.getEntrypoint());
+
+    assertEquals(1, newPlan.getLayers().size());
+    FileEntriesLayer layer = (FileEntriesLayer) newPlan.getLayers().get(0);
+    assertEquals(Arrays.asList("/new/root/theExecutable"), layerToExtractionPaths(layer));
   }
 
   @Test
@@ -120,9 +183,9 @@ public class JibNativeImageExtensionTest {
           .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
-        assertEquals(
+      assertEquals(
           "Native-image executable does not exist or not a file: "
-              + tempFolder.getRoot().toPath().resolve("theExecutable")
+              + tempFolder.getRoot().toPath().resolve("native/nativeCompile/theExecutable")
               + "\nDid you run the 'native-image:native-image' goal?",
           ex.getMessage());
     }
@@ -131,7 +194,8 @@ public class JibNativeImageExtensionTest {
   @Test
   public void testExtendContainerBuildPlan() throws JibPluginExtensionException, IOException {
     Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
-    tempFolder.newFile("theExecutable");
+    tempFolder.newFolder("native/nativeCompile/");
+    tempFolder.newFile("native/nativeCompile/theExecutable");
 
     FileEntriesLayer layer = buildLayer("original layer", Paths.get("foo.txt"));
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().addLayer(layer).build();
@@ -154,7 +218,8 @@ public class JibNativeImageExtensionTest {
   public void testExtendContainerBuildPlan_preserveExtraDirectories()
       throws JibPluginExtensionException, IOException {
     Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
-    tempFolder.newFile("theExecutable");
+    tempFolder.newFolder("native/nativeCompile");
+    tempFolder.newFile("native/nativeCompile/theExecutable");
 
     FileEntriesLayer layer = buildLayer("original layer", Paths.get("foo.txt"));
     FileEntriesLayer extraLayer1 = buildLayer("extra files", Paths.get("extra file1"));
