@@ -77,7 +77,7 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
       if (!Files.isRegularFile(jar)) {
         throw new JibPluginExtensionException(
             getClass(),
-            jar + " doesn't exist; did you run the Qaurkus Gradle plugin ('quarkusBuild' task)?");
+            jar + " doesn't exist; did you run the Quarkus Gradle plugin ('quarkusBuild' task)?");
       }
 
       ContainerBuildPlan.Builder planBuilder = buildPlan.toBuilder();
