@@ -79,7 +79,7 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
         throw new JibPluginExtensionException(
             getClass(),
             jar
-                + " doesn't exist; did you run the Qaurkus Maven plugin "
+                + " doesn't exist; did you run the Quarkus Maven plugin "
                 + "('compile' and 'quarkus:build' Maven goals)?");
       }
 
