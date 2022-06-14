@@ -43,7 +43,8 @@ import org.gradle.internal.impldep.com.google.common.annotations.VisibleForTesti
 public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
 
   @VisibleForTesting
-  static Optional<String> getExecutableName(ContainerParameters jibContainer, Map<String, String> properties) {
+  static Optional<String> getExecutableName(
+      ContainerParameters jibContainer, Map<String, String> properties) {
     String customName = properties.get("imageName");
     if (!Strings.isNullOrEmpty(customName)) {
       return Optional.of(customName);
@@ -63,9 +64,13 @@ public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
   }
 
   @Override
-  public ContainerBuildPlan extendContainerBuildPlan(ContainerBuildPlan buildPlan,
-      Map<String, String> properties, Optional<Void> config, GradleData gradleData,
-      ExtensionLogger logger) throws JibPluginExtensionException {
+  public ContainerBuildPlan extendContainerBuildPlan(
+      ContainerBuildPlan buildPlan,
+      Map<String, String> properties,
+      Optional<Void> config,
+      GradleData gradleData,
+      ExtensionLogger logger)
+      throws JibPluginExtensionException {
 
     logger.log(LogLevel.LIFECYCLE, "Running Jib Native Image extension");
 
@@ -79,15 +84,18 @@ public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
 
     Optional<String> executableName = getExecutableName(jibContainer, properties);
     if (!executableName.isPresent()) {
-      throw new JibPluginExtensionException(getClass(),
+      throw new JibPluginExtensionException(
+          getClass(),
           "cannot auto-detect native-image executable name; consider setting 'imageName' property");
     }
 
     String outputDirectory = project.getBuildDir().getAbsolutePath();
     Path localExecutable = Paths.get(outputDirectory, "native/nativeCompile", executableName.get());
     if (!Files.isRegularFile(localExecutable)) {
-      throw new JibPluginExtensionException(getClass(),
-          "Native-image executable does not exist or not a file: " + localExecutable
+      throw new JibPluginExtensionException(
+          getClass(),
+          "Native-image executable does not exist or not a file: "
+              + localExecutable
               + "\nDid you run the 'native-image:native-image' goal?");
     }
 
@@ -95,18 +103,22 @@ public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
     String appRoot = getOptionalProperty(jibContainer.getAppRoot()).orElse("/app");
     AbsoluteUnixPath targetExecutable = AbsoluteUnixPath.get(appRoot).resolve(executableName.get());
     ContainerBuildPlan.Builder planBuilder = buildPlan.toBuilder();
-    FileEntriesLayer nativeImageLayer = FileEntriesLayer.builder().setName("native image")
-        .addEntry(localExecutable, targetExecutable, FilePermissions.fromOctalString("755"))
-        .build();
+    FileEntriesLayer nativeImageLayer =
+        FileEntriesLayer.builder()
+            .setName("native image")
+            .addEntry(localExecutable, targetExecutable, FilePermissions.fromOctalString("755"))
+            .build();
     planBuilder.setLayers(Collections.singletonList(nativeImageLayer));
 
     // Preserve extra directories layers.
     String extraFilesLayerName = JavaContainerBuilder.LayerType.EXTRA_FILES.getName();
-    buildPlan.getLayers().stream().filter(layer -> layer.getName().startsWith(extraFilesLayerName))
+    buildPlan.getLayers().stream()
+        .filter(layer -> layer.getName().startsWith(extraFilesLayerName))
         .forEach(planBuilder::addLayer);
 
     // TODO: also check system and gradle properties (e.g., -Djib.container.entrypoint).
-    if (jibContainer.getEntrypoint() == null || Objects.requireNonNull(jibContainer.getEntrypoint()).isEmpty()) {
+    if (jibContainer.getEntrypoint() == null
+        || Objects.requireNonNull(jibContainer.getEntrypoint()).isEmpty()) {
       planBuilder.setEntrypoint(Collections.singletonList(targetExecutable.toString()));
     }
     return planBuilder.build();
@@ -118,7 +130,7 @@ public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
     }
 
     if (value.getClass() == String.class) {
-      if (!Strings.isNullOrEmpty((String)value)) {
+      if (!Strings.isNullOrEmpty((String) value)) {
         return Optional.of(value);
       } else {
         return Optional.empty();

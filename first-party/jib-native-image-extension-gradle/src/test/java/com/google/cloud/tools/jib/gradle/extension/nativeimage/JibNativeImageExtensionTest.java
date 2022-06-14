@@ -18,7 +18,6 @@ package com.google.cloud.tools.jib.gradle.extension.nativeimage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
@@ -50,28 +49,20 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/**
- * Tests for {@link JibNativeImageExtension}.
- */
+/** Tests for {@link JibNativeImageExtension}. */
 @RunWith(MockitoJUnitRunner.class)
 public class JibNativeImageExtensionTest {
 
-  @Rule
-  public final TemporaryFolder tempFolder = new TemporaryFolder();
+  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
 
-  @Mock
-  private ExtensionLogger logger;
+  @Mock private ExtensionLogger logger;
 
-  @Mock
-  private DefaultConvention defaultConvention;
+  @Mock private DefaultConvention defaultConvention;
 
-  @Mock
-  private Project project;
+  @Mock private Project project;
   private final GradleData gradleData = () -> project;
-  @Mock
-  private JibExtension jibPlugin;
-  @Mock
-  private ContainerParameters jibContainer;
+  @Mock private JibExtension jibPlugin;
+  @Mock private ContainerParameters jibContainer;
 
   private static FileEntriesLayer buildLayer(String layerName, Path... paths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
@@ -111,7 +102,9 @@ public class JibNativeImageExtensionTest {
     tempFolder.newFile("native/nativeCompile/theExecutable");
 
     ContainerBuildPlan buildPlan =
-        ContainerBuildPlan.builder().setEntrypoint(Collections.singletonList("to be overwritten")).build();
+        ContainerBuildPlan.builder()
+            .setEntrypoint(Collections.singletonList("to be overwritten"))
+            .build();
     ContainerBuildPlan newPlan =
         new JibNativeImageExtension()
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
@@ -126,7 +119,6 @@ public class JibNativeImageExtensionTest {
     tempFolder.newFile("native/nativeCompile/theExecutable");
 
     when(jibContainer.getEntrypoint()).thenReturn(Collections.singletonList("non-empty"));
-
 
     ContainerBuildPlan buildPlan =
         ContainerBuildPlan.builder().setEntrypoint(Collections.singletonList("set by Jib")).build();
