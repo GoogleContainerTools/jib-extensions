@@ -41,11 +41,6 @@ import org.gradle.api.Project;
 import org.gradle.internal.impldep.com.google.common.annotations.VisibleForTesting;
 
 public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
-  /*
-  If <imageName> is not specified, then native-image uses the mainClass name as the executable.
-  If <mainClass> is not specified, then native-image-maven-plugin looks at the configurations
-  for a set of other well-known plugins.
-   */
 
   @VisibleForTesting
   static Optional<String> getExecutableName(ContainerParameters jibContainer, Map<String, String> properties) {
@@ -96,7 +91,7 @@ public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
               + "\nDid you run the 'native-image:native-image' goal?");
     }
 
-    // TODO: also check system and Maven properties (e.g., -Djib.container.appRoot).
+    // TODO: also check system and gradle properties (e.g., -Djib.container.appRoot).
     String appRoot = getOptionalProperty(jibContainer.getAppRoot()).orElse("/app");
     AbsoluteUnixPath targetExecutable = AbsoluteUnixPath.get(appRoot).resolve(executableName.get());
     ContainerBuildPlan.Builder planBuilder = buildPlan.toBuilder();
