@@ -18,6 +18,8 @@ dependencies {
   testImplementation dependencyStrings.GUAVA
   testImplementation dependencyStrings.JUNIT
   testImplementation dependencyStrings.MOCKITO_CORE
+  testImplementation dependencyStrings.TRUTH
+  testImplementation dependencyStrings.TRUTH8
 }
 
 jar {

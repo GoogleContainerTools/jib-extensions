@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC.
+ * Copyright 2022 Google LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -41,22 +41,6 @@ import org.gradle.api.Project;
 import org.gradle.internal.impldep.com.google.common.annotations.VisibleForTesting;
 
 public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
-
-  @VisibleForTesting
-  static Optional<String> getExecutableName(
-      ContainerParameters jibContainer, Map<String, String> properties) {
-    String customName = properties.get("imageName");
-    if (!Strings.isNullOrEmpty(customName)) {
-      return Optional.of(customName);
-    }
-
-    Optional<String> imageName = getOptionalProperty(jibContainer.getMainClass());
-    if (imageName.isPresent()) {
-      return imageName;
-    }
-
-    return Optional.empty();
-  }
 
   @Override
   public Optional<Class<Void>> getExtraConfigType() {
@@ -124,17 +108,29 @@ public class JibNativeImageExtension implements JibGradlePluginExtension<Void> {
     return planBuilder.build();
   }
 
+  @VisibleForTesting
+  static Optional<String> getExecutableName(
+      ContainerParameters jibContainer, Map<String, String> properties) {
+    String customName = properties.get("imageName");
+    if (!Strings.isNullOrEmpty(customName)) {
+      return Optional.of(customName);
+    }
+
+    Optional<String> imageName = getOptionalProperty(jibContainer.getMainClass());
+    if (imageName.isPresent()) {
+      return imageName;
+    }
+
+    return Optional.empty();
+  }
+
   static <T> Optional<T> getOptionalProperty(@Nullable T value) {
     if (value == null) {
       return Optional.empty();
     }
 
-    if (value.getClass() == String.class) {
-      if (!Strings.isNullOrEmpty((String) value)) {
-        return Optional.of(value);
-      } else {
-        return Optional.empty();
-      }
+    if (value.getClass() == String.class && !Strings.isNullOrEmpty((String) value)) {
+      return Optional.of(value);
     }
     return Optional.empty();
   }

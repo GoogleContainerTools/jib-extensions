@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC.
+ * Copyright 2022 Google LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,8 +16,9 @@
 
 package com.google.cloud.tools.jib.gradle.extension.nativeimage;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
@@ -83,7 +84,6 @@ public class JibNativeImageExtensionTest {
     when(project.getExtensions()).thenReturn(defaultConvention);
     when(project.getExtensions().findByType(JibExtension.class)).thenReturn(jibPlugin);
     when(jibPlugin.getContainer()).thenReturn(jibContainer);
-
     when(project.getBuildDir()).thenReturn(tempFolder.getRoot());
   }
 
@@ -153,16 +153,17 @@ public class JibNativeImageExtensionTest {
   public void testNoExecutableNameDetected() {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
 
-    try {
-      new JibNativeImageExtension()
-          .extendContainerBuildPlan(
-              buildPlan, Collections.emptyMap(), Optional.empty(), gradleData, logger);
-      fail();
-    } catch (JibPluginExtensionException ex) {
-      assertEquals(
-          "cannot auto-detect native-image executable name; consider setting 'imageName' property",
-          ex.getMessage());
-    }
+    Exception exception =
+        assertThrows(
+            JibPluginExtensionException.class,
+            () ->
+                new JibNativeImageExtension()
+                    .extendContainerBuildPlan(
+                        buildPlan, Collections.emptyMap(), Optional.empty(), gradleData, logger));
+    assertThat(exception)
+        .hasMessageThat()
+        .isEqualTo(
+            "cannot auto-detect native-image executable name; consider setting 'imageName' property");
   }
 
   @Test
@@ -170,17 +171,37 @@ public class JibNativeImageExtensionTest {
     Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
 
-    try {
-      new JibNativeImageExtension()
-          .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
-      fail();
-    } catch (JibPluginExtensionException ex) {
-      assertEquals(
-          "Native-image executable does not exist or not a file: "
-              + tempFolder.getRoot().toPath().resolve("native/nativeCompile/theExecutable")
-              + "\nDid you run the 'native-image:native-image' goal?",
-          ex.getMessage());
-    }
+    Exception exception =
+        assertThrows(
+            JibPluginExtensionException.class,
+            () ->
+                new JibNativeImageExtension()
+                    .extendContainerBuildPlan(
+                        buildPlan, properties, Optional.empty(), gradleData, logger));
+    assertThat(exception)
+        .hasMessageThat()
+        .isEqualTo(
+            "Native-image executable does not exist or not a file: "
+                + tempFolder.getRoot().toPath().resolve("native/nativeCompile/theExecutable")
+                + "\nDid you run the 'native-image:native-image' goal?");
+  }
+
+  @Test
+  public void testCantFindJibPlugin() throws IOException, JibPluginExtensionException {
+    when(project.getExtensions().findByType(JibExtension.class)).thenReturn(null);
+    Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
+    tempFolder.newFolder("native/nativeCompile/");
+    tempFolder.newFile("native/nativeCompile/theExecutable");
+
+    ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    Exception exception =
+        assertThrows(
+            JibPluginExtensionException.class,
+            () ->
+                new JibNativeImageExtension()
+                    .extendContainerBuildPlan(
+                        buildPlan, properties, Optional.empty(), gradleData, logger));
+    assertThat(exception).hasMessageThat().isEqualTo("Can't find jib plugin!");
   }
 
   @Test
