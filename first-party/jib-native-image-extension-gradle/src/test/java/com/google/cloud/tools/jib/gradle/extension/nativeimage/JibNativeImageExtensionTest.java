@@ -17,7 +17,6 @@
 package com.google.cloud.tools.jib.gradle.extension.nativeimage;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -90,9 +89,8 @@ public class JibNativeImageExtensionTest {
   @Test
   public void testGetExecutableName_property() {
     Map<String, String> properties = Collections.singletonMap("imageName", "theExecutable");
-    assertEquals(
-        Optional.of("theExecutable"),
-        JibNativeImageExtension.getExecutableName(jibContainer, properties));
+    assertThat(JibNativeImageExtension.getExecutableName(jibContainer, properties))
+        .isEqualTo(Optional.of("theExecutable"));
   }
 
   @Test
@@ -109,7 +107,7 @@ public class JibNativeImageExtensionTest {
         new JibNativeImageExtension()
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
-    assertEquals(Collections.singletonList("/app/theExecutable"), newPlan.getEntrypoint());
+    assertThat(newPlan.getEntrypoint()).isEqualTo(Collections.singletonList("/app/theExecutable"));
   }
 
   @Test
@@ -126,7 +124,7 @@ public class JibNativeImageExtensionTest {
         new JibNativeImageExtension()
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
-    assertEquals(Collections.singletonList("set by Jib"), newPlan.getEntrypoint());
+    assertThat(newPlan.getEntrypoint()).isEqualTo(Collections.singletonList("set by Jib"));
   }
 
   @Test
@@ -142,11 +140,13 @@ public class JibNativeImageExtensionTest {
         new JibNativeImageExtension()
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
-    assertEquals(Arrays.asList("/new/root/theExecutable"), newPlan.getEntrypoint());
+    assertThat(newPlan.getEntrypoint())
+        .isEqualTo(Collections.singletonList("/new/root/theExecutable"));
 
-    assertEquals(1, newPlan.getLayers().size());
+    assertThat(newPlan.getLayers().size()).isEqualTo(1);
     FileEntriesLayer layer = (FileEntriesLayer) newPlan.getLayers().get(0);
-    assertEquals(Arrays.asList("/new/root/theExecutable"), layerToExtractionPaths(layer));
+    assertThat(layerToExtractionPaths(layer))
+        .isEqualTo(Collections.singletonList("/new/root/theExecutable"));
   }
 
   @Test
@@ -217,14 +217,14 @@ public class JibNativeImageExtensionTest {
         new JibNativeImageExtension()
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
-    assertEquals(1, newPlan.getLayers().size());
+    assertThat(newPlan.getLayers().size()).isEqualTo(1);
     FileEntriesLayer newLayer = (FileEntriesLayer) newPlan.getLayers().get(0);
-    assertEquals("native image", newLayer.getName());
+    assertThat(newLayer.getName()).isEqualTo("native image");
 
-    assertEquals(1, newLayer.getEntries().size());
+    assertThat(newLayer.getEntries().size()).isEqualTo(1);
     FileEntry fileEntry = newLayer.getEntries().get(0);
-    assertEquals(AbsoluteUnixPath.get("/app/theExecutable"), fileEntry.getExtractionPath());
-    assertEquals(FilePermissions.fromOctalString("755"), fileEntry.getPermissions());
+    assertThat(AbsoluteUnixPath.get("/app/theExecutable")).isEqualTo(fileEntry.getExtractionPath());
+    assertThat(fileEntry.getPermissions()).isEqualTo(FilePermissions.fromOctalString("755"));
   }
 
   @Test
@@ -246,13 +246,16 @@ public class JibNativeImageExtensionTest {
         new JibNativeImageExtension()
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
-    assertEquals(3, newPlan.getLayers().size());
+    assertThat(newPlan.getLayers().size()).isEqualTo(3);
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
     FileEntriesLayer newLayer3 = (FileEntriesLayer) newPlan.getLayers().get(2);
 
-    assertEquals(Arrays.asList("/app/theExecutable"), layerToExtractionPaths(newLayer1));
-    assertEquals(Arrays.asList("/dest/extra file1"), layerToExtractionPaths(newLayer2));
-    assertEquals(Arrays.asList("/dest/extra file2"), layerToExtractionPaths(newLayer3));
+    assertThat(layerToExtractionPaths(newLayer1))
+        .isEqualTo(Collections.singletonList("/app/theExecutable"));
+    assertThat(layerToExtractionPaths(newLayer2))
+        .isEqualTo(Collections.singletonList("/dest/extra file1"));
+    assertThat(layerToExtractionPaths(newLayer3))
+        .isEqualTo(Collections.singletonList("/dest/extra file2"));
   }
 }
