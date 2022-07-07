@@ -37,7 +37,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
@@ -78,8 +80,9 @@ public class JibQuarkusExtensionTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS)
   private JibExtension jibPlugin;
 
-  @Mock private Configuration configuration;
   private GradleData gradleData = () -> project;
+
+  private final Map<String, String> properties = new HashMap<>();
 
   private static FileEntriesLayer buildLayer(String layerName, List<String> filePaths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
@@ -120,7 +123,6 @@ public class JibQuarkusExtensionTest {
     when(subModuleArtifact.getId())
         .thenReturn(new MockComponentArtifactIdentifier(new MockProjectComponentIdentifier()));
     when(subModuleArtifact.getFile()).thenReturn(tempFolder.newFile("sub-module-artifact.jar"));
-    when(configuration.getPackageType()).thenReturn(Configuration.PackageType.FAST);
   }
 
   @Test
@@ -130,7 +132,7 @@ public class JibQuarkusExtensionTest {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     ContainerBuildPlan newPlan =
         new JibQuarkusExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
     assertEquals(
         Arrays.asList("java", "-verbose:gc", "-Dmy.property=value", "-jar", "/new/appRoot/app.jar"),
@@ -146,7 +148,7 @@ public class JibQuarkusExtensionTest {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
     ContainerBuildPlan newPlan =
         new JibQuarkusExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
     assertEquals(
         Arrays.asList("java", "-verbose:gc", "-Dmy.property=value", "-jar", "/app/app.jar"),
@@ -161,7 +163,7 @@ public class JibQuarkusExtensionTest {
 
     try {
       new JibQuarkusExtension()
-          .extendContainerBuildPlan(buildPlan, null, Optional.empty(), gradleData, logger);
+          .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibQuarkusExtension.class, ex.getExtensionClass());
@@ -179,12 +181,12 @@ public class JibQuarkusExtensionTest {
       throws IOException, JibPluginExtensionException {
     createFastJar();
     when(jibPlugin.getContainer().getAppRoot()).thenReturn("");
+    properties.put("packageType", "fast-jar");
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
 
     ContainerBuildPlan newPlan =
         new JibQuarkusExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(configuration), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
     assertEquals(7, newPlan.getLayers().size());
     FileEntriesLayer lastLayer = (FileEntriesLayer) newPlan.getLayers().get(6);
     assertEquals(
@@ -195,11 +197,11 @@ public class JibQuarkusExtensionTest {
   @Test
   public void testExtendContainerBuildPlan_noQuarkusFastJar() throws IOException {
     ContainerBuildPlan buildPlan = ContainerBuildPlan.builder().build();
+    properties.put("packageType", "fast-jar");
 
     try {
       new JibQuarkusExtension()
-          .extendContainerBuildPlan(
-              buildPlan, null, Optional.of(configuration), gradleData, logger);
+          .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
       fail();
     } catch (JibPluginExtensionException ex) {
       assertEquals(JibQuarkusExtension.class, ex.getExtensionClass());
@@ -225,10 +227,11 @@ public class JibQuarkusExtensionTest {
         ContainerBuildPlan.builder()
             .setLayers(Arrays.asList(originalLayer, extraLayer1, extraLayer2))
             .build();
+    properties.put("packageType", "legacy-jar");
 
     ContainerBuildPlan newPlan =
         new JibQuarkusExtension()
-            .extendContainerBuildPlan(buildPlan, null, Optional.empty(), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
     assertEquals(6, newPlan.getLayers().size());
     FileEntriesLayer layer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
@@ -273,11 +276,11 @@ public class JibQuarkusExtensionTest {
         ContainerBuildPlan.builder()
             .setLayers(Arrays.asList(originalLayer, extraLayer1, extraLayer2))
             .build();
+    properties.put("packageType", "fast-jar");
 
     ContainerBuildPlan newPlan =
         new JibQuarkusExtension()
-            .extendContainerBuildPlan(
-                buildPlan, null, Optional.of(configuration), gradleData, logger);
+            .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
     assertEquals(9, newPlan.getLayers().size());
     FileEntriesLayer layer1 = (FileEntriesLayer) newPlan.getLayers().get(0);

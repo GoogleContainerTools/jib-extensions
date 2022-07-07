@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers;
 
-import com.google.cloud.tools.jib.gradle.extension.quarkus.Configuration.PackageType;
+import com.google.cloud.tools.jib.gradle.extension.quarkus.PackageType;
 import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.impl.FastJarResolver;
 import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.impl.LegacyJarResolver;
 

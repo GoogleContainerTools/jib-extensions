@@ -23,7 +23,6 @@ import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.gradle.JibExtension;
 import com.google.cloud.tools.jib.gradle.extension.GradleData;
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension;
-import com.google.cloud.tools.jib.gradle.extension.quarkus.Configuration.PackageType;
 import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.JarResolver;
 import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.JarResolverFactory;
 import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.impl.LegacyJarResolver;
@@ -49,7 +48,7 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.plugins.JavaPlugin;
 
-public class JibQuarkusExtension implements JibGradlePluginExtension<Configuration> {
+public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
 
   private AbsoluteUnixPath appRoot = AbsoluteUnixPath.get("/app");
   private List<String> jvmFlags = Collections.emptyList();
@@ -58,27 +57,23 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Configurati
   private PackageType packageType = PackageType.LEGACY;
 
   @Override
-  public Optional<Class<Configuration>> getExtraConfigType() {
-    return Optional.of(Configuration.class);
+  public Optional<Class<Void>> getExtraConfigType() {
+    return Optional.empty();
   }
 
   @Override
   public ContainerBuildPlan extendContainerBuildPlan(
       ContainerBuildPlan buildPlan,
       Map<String, String> properties,
-      Optional<Configuration> config,
+      Optional<Void> config,
       GradleData gradleData,
       ExtensionLogger logger)
       throws JibPluginExtensionException {
     try {
       logger.log(LogLevel.LIFECYCLE, "Running Quarkus Jib extension");
-      if (!config.isPresent()) {
-        logger.log(
-            LogLevel.WARN,
-            "Packaging type not configured for Jib Quarkus Gradle Extension. Using default: legacy");
-      } else {
-        packageType = config.get().getPackageType();
-      }
+
+      packageType =
+          PackageType.getPackageTypeByName(properties.getOrDefault("packageType", "legacy-jar"));
 
       readJibConfigurations(gradleData.getProject());
 
