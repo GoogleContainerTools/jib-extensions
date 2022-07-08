@@ -56,13 +56,12 @@ public class JibNativeImageExtensionTest {
   @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Mock private ExtensionLogger logger;
-
   @Mock private DefaultConvention defaultConvention;
-
   @Mock private Project project;
-  private final GradleData gradleData = () -> project;
   @Mock private JibExtension jibPlugin;
   @Mock private ContainerParameters jibContainer;
+
+  private final GradleData gradleData = () -> project;
 
   private static FileEntriesLayer buildLayer(String layerName, Path... paths) {
     FileEntriesLayer.Builder builder = FileEntriesLayer.builder().setName(layerName);
@@ -142,10 +141,8 @@ public class JibNativeImageExtensionTest {
 
     assertThat(newPlan.getEntrypoint())
         .isEqualTo(Collections.singletonList("/new/root/theExecutable"));
-
     assertThat(newPlan.getLayers().size()).isEqualTo(1);
-    FileEntriesLayer layer = (FileEntriesLayer) newPlan.getLayers().get(0);
-    assertThat(layerToExtractionPaths(layer))
+    assertThat(layerToExtractionPaths((FileEntriesLayer) newPlan.getLayers().get(0)))
         .isEqualTo(Collections.singletonList("/new/root/theExecutable"));
   }
 
@@ -180,10 +177,9 @@ public class JibNativeImageExtensionTest {
                         buildPlan, properties, Optional.empty(), gradleData, logger));
     assertThat(exception)
         .hasMessageThat()
-        .isEqualTo(
+        .startsWith(
             "Native-image executable does not exist or not a file: "
-                + tempFolder.getRoot().toPath().resolve("native/nativeCompile/theExecutable")
-                + "\nDid you run the 'native-image:native-image' goal?");
+                + tempFolder.getRoot().toPath().resolve("native/nativeCompile/theExecutable"));
   }
 
   @Test
@@ -223,7 +219,7 @@ public class JibNativeImageExtensionTest {
 
     assertThat(newLayer.getEntries().size()).isEqualTo(1);
     FileEntry fileEntry = newLayer.getEntries().get(0);
-    assertThat(AbsoluteUnixPath.get("/app/theExecutable")).isEqualTo(fileEntry.getExtractionPath());
+    assertThat(fileEntry.getExtractionPath()).isEqualTo(AbsoluteUnixPath.get("/app/theExecutable"));
     assertThat(fileEntry.getPermissions()).isEqualTo(FilePermissions.fromOctalString("755"));
   }
 
@@ -247,15 +243,11 @@ public class JibNativeImageExtensionTest {
             .extendContainerBuildPlan(buildPlan, properties, Optional.empty(), gradleData, logger);
 
     assertThat(newPlan.getLayers().size()).isEqualTo(3);
-    FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
-    FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
-    FileEntriesLayer newLayer3 = (FileEntriesLayer) newPlan.getLayers().get(2);
-
-    assertThat(layerToExtractionPaths(newLayer1))
+    assertThat(layerToExtractionPaths((FileEntriesLayer) newPlan.getLayers().get(0)))
         .isEqualTo(Collections.singletonList("/app/theExecutable"));
-    assertThat(layerToExtractionPaths(newLayer2))
+    assertThat(layerToExtractionPaths((FileEntriesLayer) newPlan.getLayers().get(1)))
         .isEqualTo(Collections.singletonList("/dest/extra file1"));
-    assertThat(layerToExtractionPaths(newLayer3))
+    assertThat(layerToExtractionPaths((FileEntriesLayer) newPlan.getLayers().get(2)))
         .isEqualTo(Collections.singletonList("/dest/extra file2"));
   }
 }
