@@ -1,0 +1,62 @@
+plugins {
+  id 'java-gradle-plugin'
+  id 'net.researchgate.release'
+  id 'maven-publish'
+}
+
+repositories {
+  gradlePluginPortal()
+}
+
+dependencies {
+  compileOnly dependencyStrings.JIB_GRADLE_EXTENSION
+  compileOnly dependencyStrings.JIB_GRADLE
+  compileOnly dependencyStrings.GUAVA
+
+  testImplementation dependencyStrings.JIB_GRADLE_EXTENSION
+  testImplementation dependencyStrings.JIB_GRADLE
+  testImplementation dependencyStrings.GUAVA
+  testImplementation dependencyStrings.JUNIT
+  testImplementation dependencyStrings.MOCKITO_CORE
+  testImplementation dependencyStrings.TRUTH
+  testImplementation dependencyStrings.TRUTH8
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Version': version
+    attributes 'Automatic-Module-Name': 'com.google.cloud.tools.jib.gradle.extension.nativeimage'
+
+    // OSGi metadata
+    attributes 'Bundle-SymbolicName': 'com.google.cloud.tools.jib.gradle.extension.nativeimage'
+    attributes 'Bundle-Name': 'Native Image Extension for Jib Gradle Plugin'
+    attributes 'Bundle-Vendor': 'Google LLC'
+    attributes 'Bundle-DocURL': 'https://github.com/GoogleContainerTools/jib-extensions'
+    attributes 'Bundle-License': 'https://www.apache.org/licenses/LICENSE-2.0'
+    attributes 'Export-Package': 'com.google.cloud.tools.jib.*'
+  }
+}
+
+/* RELEASE */
+configureMavenRelease()
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      pom {
+        name = 'Native Image Extension for Jib Gradle Plugin'
+        description = 'Provides support for containerizing native image (standalone executable).'
+      }
+      from components.java
+    }
+  }
+}
+
+// Release plugin (git release commits and version updates)
+release {
+  tagTemplate = 'v$version-jib-native-image-extension-gradle'
+  git {
+    requireBranch = /^jib-native-image-extension-gradle-release-v\d+.*$/  //regex
+  }
+}
+/* RELEASE */
