@@ -23,6 +23,9 @@ import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
 import com.google.cloud.tools.jib.gradle.JibExtension;
 import com.google.cloud.tools.jib.gradle.extension.GradleData;
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension;
+import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.JarResolver;
+import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.JarResolverFactory;
+import com.google.cloud.tools.jib.gradle.extension.quarkus.resolvers.impl.LegacyJarResolver;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
@@ -44,12 +47,14 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.jvm.tasks.Jar;
 
 public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
 
   private AbsoluteUnixPath appRoot = AbsoluteUnixPath.get("/app");
   private List<String> jvmFlags = Collections.emptyList();
+
+  private JarResolver jarResolver = new LegacyJarResolver();
+  private PackageType packageType = PackageType.LEGACY;
 
   @Override
   public Optional<Class<Void>> getExtraConfigType() {
@@ -66,39 +71,37 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
       throws JibPluginExtensionException {
     try {
       logger.log(LogLevel.LIFECYCLE, "Running Quarkus Jib extension");
+
+      packageType =
+          PackageType.getPackageTypeByName(properties.getOrDefault("packageType", "legacy-jar"));
+
       readJibConfigurations(gradleData.getProject());
 
       Project project = gradleData.getProject();
-      Path buildDir = project.getBuildDir().toPath();
-      Jar jarTask = (Jar) project.getTasks().findByName("jar");
-      String jarName = jarTask.getArchiveFile().get().getAsFile().getName();
-      Path jar = buildDir.resolve(jarName.replaceAll("\\.jar$", "-runner.jar"));
-
-      if (!Files.isRegularFile(jar)) {
-        throw new JibPluginExtensionException(
-            getClass(),
-            jar + " doesn't exist; did you run the Quarkus Gradle plugin ('quarkusBuild' task)?");
-      }
+      Path jar = jarResolver.getPathToLocalJar(project);
 
       ContainerBuildPlan.Builder planBuilder = buildPlan.toBuilder();
       planBuilder.setLayers(Collections.emptyList());
 
-      // dependency layers
-      addDependencyLayers(project, planBuilder, buildDir.resolve("lib"));
+      // Dependency layers
+      for (Path path : jarResolver.getPathsToDependencies(project)) {
+        addDependencyLayers(project, planBuilder, path);
+      }
 
-      // Quarkus runner JAR layer
-      AbsoluteUnixPath appRootJar = appRoot.resolve("app.jar");
+      // Quarkus JAR layer
+      AbsoluteUnixPath appRootJar = jarResolver.getPathToJarInContainer(appRoot);
+
       FileEntriesLayer jarLayer =
           FileEntriesLayer.builder().setName("quarkus jar").addEntry(jar, appRootJar).build();
       planBuilder.addLayer(jarLayer);
 
-      // Preserve extra directories layers.
+      // Preserve extra directories layers
       String extraFilesLayerName = JavaContainerBuilder.LayerType.EXTRA_FILES.getName();
       buildPlan.getLayers().stream()
           .filter(layer -> layer.getName().startsWith(extraFilesLayerName))
           .forEach(planBuilder::addLayer);
 
-      // set entrypoint
+      // Set entrypoint
       List<String> entrypoint = new ArrayList<>();
       entrypoint.add("java");
       entrypoint.addAll(jvmFlags);
@@ -136,25 +139,32 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
             path.getFileName().toString().contains("SNAPSHOT") && !isProjectDependency.test(path);
     Predicate<Path> isThirdParty = isProjectDependency.negate().and(isSnapshot.negate());
 
-    addDependencyLayer(planBuilder, libDirectory, "dependencies", isThirdParty);
-    addDependencyLayer(planBuilder, libDirectory, "snapshot dependencies", isSnapshot);
-    addDependencyLayer(planBuilder, libDirectory, "project dependencies", isProjectDependency);
+    addDependencyLayer(project, planBuilder, libDirectory, "dependencies", isThirdParty);
+    addDependencyLayer(project, planBuilder, libDirectory, "snapshot dependencies", isSnapshot);
+    addDependencyLayer(
+        project, planBuilder, libDirectory, "project dependencies", isProjectDependency);
   }
 
   private void addDependencyLayer(
+      Project project,
       ContainerBuildPlan.Builder planBuilder,
       Path libDirectory,
       String layerName,
       Predicate<Path> predicate)
       throws IOException {
     FileEntriesLayer.Builder layerBuilder = FileEntriesLayer.builder().setName(layerName);
+
+    String relativePathInLib =
+        project.getBuildDir().toURI().relativize(libDirectory.toUri()).toString();
+
     try (Stream<Path> files = Files.list(libDirectory)) {
       files
           .filter(predicate)
           .forEach(
               path -> {
                 layerBuilder.addEntry(
-                    path, appRoot.resolve("lib").resolve(path.getFileName().toString()));
+                    path,
+                    appRoot.resolve(relativePathInLib).resolve(path.getFileName().toString()));
               });
     }
 
@@ -171,5 +181,6 @@ public class JibQuarkusExtension implements JibGradlePluginExtension<Void> {
       appRoot = AbsoluteUnixPath.get(appRootValue);
     }
     jvmFlags = jibPlugin.getContainer().getJvmFlags();
+    jarResolver = new JarResolverFactory().getJarResolver(packageType);
   }
 }
