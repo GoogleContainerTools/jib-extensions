@@ -4,7 +4,7 @@ A list of Jib extensions developed and maintained by the Jib developer team. For
 
 - Jib Layer-Filter Extension ([Maven](jib-layer-filter-extension-maven) / [Gradle](jib-layer-filter-extension-gradle))
 - Jib Quarkus Extension ([Maven](jib-quarkus-extension-maven) / [Gradle](jib-quarkus-extension-gradle))
-- Jib Onwership Extension ([Maven](jib-ownership-extension-maven) / [Gradle](jib-ownership-extension-gradle))
+- Jib Ownership Extension ([Maven](jib-ownership-extension-maven) / [Gradle](jib-ownership-extension-gradle))
 - Jib Spring Boot Extension ([Maven](jib-spring-boot-extension-maven) / [Gradle](jib-spring-boot-extension-gradle))
 - Jib GraalVM Native Image Extension ([Maven](jib-native-image-extension-maven))
 
