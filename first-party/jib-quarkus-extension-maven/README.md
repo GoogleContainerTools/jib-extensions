@@ -4,11 +4,11 @@
 
 Enables containerizing a Quarkus app built with [Quarkus Maven Plugin](https://search.maven.org/artifact/io.quarkus/quarkus-maven-plugin).
 
-The Quarkus app framework prepares a special "runner" JAR and aguments dependency JARs, where the standard Jib containerization does not fit. This extension takes the JARs prepared by Quakus (runner JAR and augmented dependency JARs) and sets the entrypoint to run the runner JAR.
+The Quarkus app framework prepares a special "runner" JAR and augments dependency JARs, where the standard Jib containerization does not fit. This extension takes the JARs prepared by Quarkus (runner JAR and augmented dependency JARs) and sets the entrypoint to run the runner JAR.
 
 ## Examples
 
-Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions) for applying a Jib plugin extension.
+Check out the [general instructions](../../README.md#using-jib-plugin-extensions) for applying a Jib plugin extension.
 
 Note that `<container><mainClass>` should be set to some placeholder value to suppress Jib warning about missing main class.
 
@@ -52,7 +52,7 @@ Note that `<container><mainClass>` should be set to some placeholder value to su
 
 ## Standard Jib Configurations Being Ignored
 
-By the way Quarkus needs to run (via `java -jar quarkus-runner.jar`), some standard Jib configruations will have no effect:
+By the way Quarkus needs to run (via `java -jar quarkus-runner.jar`), some standard Jib configurations will have no effect:
 
 - `<container><mainClass>`
 - `<container><entrypoint>` (Note `<container><args>` continues to work.)
