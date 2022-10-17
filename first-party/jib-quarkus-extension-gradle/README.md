@@ -20,7 +20,7 @@ Note that `container.mainClass` should be set to some placeholder value to suppr
 // should be at the top of build.gradle
 buildscript {
   dependencies {
-    classpath('com.google.cloud.tools:jib-quarkus-extension-gradle:0.1.1')
+    classpath('com.google.cloud.tools:jib-quarkus-extension-gradle:0.1.2')
   }
 }
 
