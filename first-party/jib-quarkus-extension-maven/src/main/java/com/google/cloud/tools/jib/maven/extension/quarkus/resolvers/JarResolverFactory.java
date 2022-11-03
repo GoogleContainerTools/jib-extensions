@@ -36,7 +36,7 @@ public class JarResolverFactory {
         return new FastJarResolver();
       default:
         throw new IllegalArgumentException(
-            "Quarkus packaging is set wrong! It has to be either legacy or fast.");
+            "Unable to determine the packaging type. Please ensure that it is either legacy-jar or fast-jar.");
     }
   }
 }

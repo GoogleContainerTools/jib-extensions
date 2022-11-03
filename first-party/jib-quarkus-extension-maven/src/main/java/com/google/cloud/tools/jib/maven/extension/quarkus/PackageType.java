@@ -24,24 +24,23 @@ public enum PackageType {
   LEGACY("legacy-jar"),
   FAST("fast-jar");
 
-  private final String packageType;
+  private final String name;
 
-  PackageType(String packageType) {
-    this.packageType = packageType;
+  PackageType(String name) {
+    this.name = name;
   }
 
   /**
    * Retrieves package type by the config property value.
    *
-   * @param packageType name of the package type
+   * @param name name of the package type
    * @return enum of the package type
    * @throws JibPluginExtensionException if there is an unknown package type value given to the
    *     extension config
    */
-  public static PackageType getPackageTypeByName(String packageType)
-      throws JibPluginExtensionException {
+  public static PackageType getPackageTypeByName(String name) throws JibPluginExtensionException {
     Optional<PackageType> packageTypeEnum =
-        Arrays.stream(values()).filter(el -> packageType.equals(el.packageType)).findFirst();
+        Arrays.stream(values()).filter(el -> name.equals(el.name)).findFirst();
     if (packageTypeEnum.isPresent()) {
       return packageTypeEnum.get();
     }

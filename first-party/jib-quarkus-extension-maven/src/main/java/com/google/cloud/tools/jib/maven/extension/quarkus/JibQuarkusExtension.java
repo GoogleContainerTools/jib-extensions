@@ -80,7 +80,6 @@ public class JibQuarkusExtension implements JibMavenPluginExtension<Void> {
 
       readJibConfigurations(mavenData.getMavenProject());
 
-      logger.log(LogLevel.ERROR, "Package type: " + packageType);
       Path jar = jarResolver.getPathToLocalJar(mavenData.getMavenProject());
 
       ContainerBuildPlan.Builder planBuilder = buildPlan.toBuilder();
