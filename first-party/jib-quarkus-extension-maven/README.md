@@ -27,7 +27,7 @@ Note that `<container><mainClass>` should be set to some placeholder value to su
     <dependency>
       <groupId>com.google.cloud.tools</groupId>
       <artifactId>jib-quarkus-extension-maven</artifactId>
-      <version>0.1.0</version>
+      <version>0.1.1</version>
     </dependency>
   </dependencies>
 
