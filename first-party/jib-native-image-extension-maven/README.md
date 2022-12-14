@@ -8,7 +8,7 @@ You can still put extra files into a container image using Jib's [`<extraDirecto
 
 ## Examples
 
-Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions) for applying a Jib plugin extension.
+Check out the [general instructions](../../README.md#using-jib-plugin-extensions) for applying a Jib plugin extension.
 
 ```xml
 <plugin>
