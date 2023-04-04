@@ -14,3 +14,14 @@ your current agreements on file or to sign a new one.
 You generally only need to submit a CLA once, so if you've already submitted one
 (even if it was for a different project), you probably don't need to do it
 again.
+
+### Code reviews
+
+All submissions, including submissions by project members, require review. We
+use Github pull requests for this purpose.
+
+Before submitting a pull request, please make sure to:
+
+- Identify an existing [issue](https://github.com/GoogleContainerTools/jib-extensions/issues) to associate
+  with your proposed change, or [file a new issue](https://github.com/GoogleContainerTools/jib-extensions/issues/new).
+- Describe any implementation plans in the issue and wait for a review from the repository maintainers.
