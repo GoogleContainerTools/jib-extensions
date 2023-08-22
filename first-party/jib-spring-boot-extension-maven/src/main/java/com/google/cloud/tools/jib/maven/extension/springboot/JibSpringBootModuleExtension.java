@@ -25,75 +25,69 @@ import com.google.cloud.tools.jib.maven.extension.JibMavenPluginExtension;
 import com.google.cloud.tools.jib.maven.extension.MavenData;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
-import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
+
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 
-public class JibSpringBootExtension implements JibMavenPluginExtension<Void> {
+public interface JibSpringBootModuleExtension extends JibMavenPluginExtension<Void> {
 
   @Override
-  public Optional<Class<Void>> getExtraConfigType() {
+  default Optional<Class<Void>> getExtraConfigType() {
     return Optional.empty();
   }
 
+  String getModuleName();
+  String getExcludePropertyName();
+
   @Override
-  public ContainerBuildPlan extendContainerBuildPlan(
+  default ContainerBuildPlan extendContainerBuildPlan(
       ContainerBuildPlan buildPlan,
       Map<String, String> properties,
       Optional<Void> config,
       MavenData mavenData,
-      ExtensionLogger logger)
-      throws JibPluginExtensionException {
-    logger.log(LogLevel.LIFECYCLE, "Running Jib Spring Boot extension");
+      ExtensionLogger logger) {
+    logger.log(LogLevel.LIFECYCLE, "Running Jib Spring Boot extension for module " + getModuleName());
 
-    if (!shouldExcludeDevtools(mavenData.getMavenProject(), logger)) {
-      logger.log(LogLevel.INFO, "Keeping spring-boot-devtools (if any)");
+    if (!shouldExcludeModule(mavenData.getMavenProject(), logger)) {
+      logger.log(LogLevel.INFO, "Keeping " + getModuleName() + " (if any)");
       return buildPlan;
     }
-    logger.log(LogLevel.INFO, "Removing spring-boot-devtools (if any)");
+    logger.log(LogLevel.INFO, "Removing " + getModuleName() + " (if any)");
 
     List<LayerObject> newLayers =
         buildPlan.getLayers().stream()
-            .map(JibSpringBootExtension::filterOutDevtools)
+            .map(this::filterOutModule)
             .collect(Collectors.toList());
     return buildPlan.toBuilder().setLayers(newLayers).build();
   }
 
-  @VisibleForTesting
-  static boolean isDevtoolsJar(File file) {
-    return file.getName().startsWith("spring-boot-devtools-") && file.getName().endsWith(".jar");
-  }
-
-  @VisibleForTesting
-  static boolean shouldExcludeDevtools(MavenProject project, ExtensionLogger logger) {
+  default boolean shouldExcludeModule(MavenProject project, ExtensionLogger logger) {
     Plugin bootPlugin = project.getPlugin("org.springframework.boot:spring-boot-maven-plugin");
     if (bootPlugin == null) {
       logger.log(
-          LogLevel.WARN,
-          "Jib Spring Boot extension: project doesn't have spring-boot-maven-plugin?");
+              LogLevel.WARN,
+              "Jib Spring Boot extension: project doesn't have spring-boot-maven-plugin?");
       return true;
     }
 
     Xpp3Dom configuration = (Xpp3Dom) bootPlugin.getConfiguration();
     if (configuration != null) {
-      Xpp3Dom excludeDevtools = configuration.getChild("excludeDevtools");
+      Xpp3Dom excludeDevtools = configuration.getChild(getExcludePropertyName());
       if (excludeDevtools != null) {
         return "true".equalsIgnoreCase(excludeDevtools.getValue());
       }
     }
-    return true; // Spring Boot's <excludeDevtools> default is true.
+    return true; // Spring Boot's exclude property default is true.
   }
 
-  @VisibleForTesting
-  static LayerObject filterOutDevtools(LayerObject layerObject) {
+  default LayerObject filterOutModule(LayerObject layerObject) {
     String dependencyLayerName = JavaContainerBuilder.LayerType.DEPENDENCIES.getName();
     if (!dependencyLayerName.equals(layerObject.getName())) {
       return layerObject;
@@ -101,9 +95,13 @@ public class JibSpringBootExtension implements JibMavenPluginExtension<Void> {
 
     FileEntriesLayer layer = (FileEntriesLayer) layerObject;
     Predicate<FileEntry> notDevtoolsJar =
-        fileEntry -> !isDevtoolsJar(fileEntry.getSourceFile().toFile());
+        fileEntry -> !isModuleJar(fileEntry.getSourceFile().toFile());
     List<FileEntry> newEntries =
         layer.getEntries().stream().filter(notDevtoolsJar).collect(Collectors.toList());
     return layer.toBuilder().setEntries(newEntries).build();
+  }
+
+  default boolean isModuleJar(File file) {
+    return file.getName().startsWith(getModuleName() + "-") && file.getName().endsWith(".jar");
   }
 }

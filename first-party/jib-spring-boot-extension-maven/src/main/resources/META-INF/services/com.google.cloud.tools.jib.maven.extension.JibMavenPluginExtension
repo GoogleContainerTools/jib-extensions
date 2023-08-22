@@ -1,1 +1,1 @@
-com.google.cloud.tools.jib.maven.extension.springboot.JibSpringBootExtension
+com.google.cloud.tools.jib.maven.extension.springboot.JibSpringBootDevtoolsExtension
