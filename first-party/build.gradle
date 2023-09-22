@@ -62,7 +62,7 @@ subprojects {
     GUAVA: 'com.google.guava:guava:30.1.1-jre',
     JSR305: 'com.google.code.findbugs:jsr305:3.0.2', // transitively pulled in by GUAVA
 
-    JIB_CORE: 'com.google.cloud.tools:jib-core:0.24.0',
+    JIB_CORE: 'com.google.cloud.tools:jib-core:0.25.0',
     JIB_GRADLE: 'com.google.cloud.tools:jib-gradle-plugin:3.4.0',
 
     // for Build Plan and Jib Plugins Extension API
