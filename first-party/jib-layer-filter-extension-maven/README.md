@@ -51,9 +51,9 @@ Check out the [genenal instructions](../../README.md#using-jib-plugin-extensions
               <toLayer>this layer will not be created</toLayer>
             </filter>
           </filters>
+          <!-- To create separate layers for parent dependencies-->
+          <createParentDependencyLayers>true</createParentDependencyLayers>
         </configuration>
-        <!-- To create separate layers for parent dependencies-->
-        <createParentDependencyLayers>true</createParentDependencyLayers>
       </pluginExtension>
     </pluginExtensions>
   </configuration>
