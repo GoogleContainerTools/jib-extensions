@@ -40,7 +40,7 @@ The following example adds and runs the [Jib Layer-Filter Extension](first-party
   <plugin>
     <groupId>com.google.cloud.tools</groupId>
     <artifactId>jib-maven-plugin</artifactId>
-    <version>3.4.1</version>
+    <version>3.4.2</version>
 
     <!-- 1. have extension classes available on Jib's runtime classpath -->
     <dependencies>
