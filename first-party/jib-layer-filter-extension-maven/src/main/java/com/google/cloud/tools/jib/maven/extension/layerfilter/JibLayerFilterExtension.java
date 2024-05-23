@@ -54,12 +54,7 @@ import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 @Singleton
 public class JibLayerFilterExtension implements JibMavenPluginExtension<Configuration> {
 
-  private Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
-
   @VisibleForTesting @Inject ProjectDependenciesResolver dependencyResolver;
-
-  // (layer name, layer builder) map for new layers of configured <toLayer>
-  @VisibleForTesting Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
 
   @Override
   public Optional<Class<Configuration>> getExtraConfigType() {
@@ -80,7 +75,12 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       return buildPlan;
     }
 
-    preparePathMatchersAndLayerBuilders(buildPlan, config.get());
+    Map<PathMatcher, String> pathMatchers = new LinkedHashMap<>();
+
+    // (layer name, layer builder) map for new layers of configured <toLayer>
+    Map<String, FileEntriesLayer.Builder> newToLayers = new LinkedHashMap<>();
+
+    preparePathMatchersAndLayerBuilders(buildPlan, config.get(), pathMatchers, newToLayers);
 
     ContainerBuildPlan.Builder newPlanBuilder = buildPlan.toBuilder();
     newPlanBuilder.setLayers(Collections.emptyList());
@@ -92,7 +92,8 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
       List<FileEntry> filesToKeep = new ArrayList<>();
 
       for (FileEntry entry : layer.getEntries()) {
-        Optional<String> finalLayerName = determineFinalLayerName(entry, layer.getName());
+        Optional<String> finalLayerName =
+            determineFinalLayerName(entry, layer.getName(), pathMatchers);
         // Either keep, move, or delete this FileEntry.
         if (finalLayerName.isPresent()) {
           if (finalLayerName.get().equals(layer.getName())) {
@@ -235,11 +236,14 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
   }
 
   private void preparePathMatchersAndLayerBuilders(
-      ContainerBuildPlan buildPlan, Configuration config) throws JibPluginExtensionException {
+      ContainerBuildPlan buildPlan,
+      Configuration config,
+      Map<PathMatcher, String> pathMatchers,
+      Map<String, FileEntriesLayer.Builder> newToLayers)
+      throws JibPluginExtensionException {
     List<String> originalLayerNames =
         buildPlan.getLayers().stream().map(LayerObject::getName).collect(Collectors.toList());
 
-    newToLayers.clear(); // ensure empty (in case previously built module already populated it)
     for (Configuration.Filter filter : config.getFilters()) {
       String toLayerName = filter.getToLayer();
       if (!toLayerName.isEmpty() && originalLayerNames.contains(toLayerName)) {
@@ -271,7 +275,8 @@ public class JibLayerFilterExtension implements JibMavenPluginExtension<Configur
    * @return final layer name into which {@code fileEntry} should move. May be same as {@code
    *     originalLayerName}. {@link Optional#empty()} indicates deletion.
    */
-  private Optional<String> determineFinalLayerName(FileEntry fileEntry, String originalLayerName) {
+  private Optional<String> determineFinalLayerName(
+      FileEntry fileEntry, String originalLayerName, Map<PathMatcher, String> pathMatchers) {
     Optional<String> finalLayerName = Optional.of(originalLayerName);
 
     for (Map.Entry<PathMatcher, String> mapEntry : pathMatchers.entrySet()) {
