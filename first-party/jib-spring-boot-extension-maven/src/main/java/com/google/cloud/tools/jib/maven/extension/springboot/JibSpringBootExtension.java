@@ -28,9 +28,7 @@ import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Plugin;
@@ -54,58 +52,70 @@ public class JibSpringBootExtension implements JibMavenPluginExtension<Void> {
       throws JibPluginExtensionException {
     logger.log(LogLevel.LIFECYCLE, "Running Jib Spring Boot extension");
 
-    if (!shouldExcludeDevtools(mavenData.getMavenProject(), logger)) {
-      logger.log(LogLevel.INFO, "Keeping spring-boot-devtools (if any)");
+    List<String> exclusions = excludeDependencies(mavenData.getMavenProject(), logger);
+    if (exclusions == null || exclusions.isEmpty()) {
+      logger.log(LogLevel.INFO, "Keeping dependencies (if any)");
       return buildPlan;
     }
-    logger.log(LogLevel.INFO, "Removing spring-boot-devtools (if any)");
+    logger.log(LogLevel.INFO, "Removing dependencies (if any)");
 
     List<LayerObject> newLayers =
-        buildPlan
-            .getLayers()
-            .stream()
-            .map(JibSpringBootExtension::filterOutDevtools)
+        buildPlan.getLayers().stream()
+            .map(layerObject -> filterOutDependencies(layerObject, exclusions))
             .collect(Collectors.toList());
     return buildPlan.toBuilder().setLayers(newLayers).build();
   }
 
   @VisibleForTesting
-  static boolean isDevtoolsJar(File file) {
-    return file.getName().startsWith("spring-boot-devtools-") && file.getName().endsWith(".jar");
+  static boolean isDependencyJar(File file, List<String> exclusions) {
+    return exclusions.stream().anyMatch(e -> file.getName().startsWith(e)) && file.getName().endsWith(".jar");
   }
 
   @VisibleForTesting
-  static boolean shouldExcludeDevtools(MavenProject project, ExtensionLogger logger) {
+  static List<String> excludeDependencies(MavenProject project, ExtensionLogger logger) {
+    List<String> exclusions = new ArrayList<>();
+
     Plugin bootPlugin = project.getPlugin("org.springframework.boot:spring-boot-maven-plugin");
     if (bootPlugin == null) {
       logger.log(
           LogLevel.WARN,
           "Jib Spring Boot extension: project doesn't have spring-boot-maven-plugin?");
-      return true;
+      return exclusions;
     }
 
     Xpp3Dom configuration = (Xpp3Dom) bootPlugin.getConfiguration();
     if (configuration != null) {
       Xpp3Dom excludeDevtools = configuration.getChild("excludeDevtools");
       if (excludeDevtools != null) {
-        return "true".equalsIgnoreCase(excludeDevtools.getValue());
+        if ("true".equalsIgnoreCase(excludeDevtools.getValue())) {
+          exclusions.add("spring-boot-devtools-");
+        }
+      }
+      Xpp3Dom excludes = configuration.getChild("excludes");
+      if (excludes != null && excludes.getChildCount() > 0) {
+        for (Xpp3Dom child:excludes.getChildren()) {
+          exclusions.add(String.format("%s-", child.getChild("artifactId").getValue()));
+        }
       }
     }
-    return true; // Spring Boot's <excludeDevtools> default is true.
+
+    // no dependencies or devtools need to be excluded
+    return exclusions;
   }
 
   @VisibleForTesting
-  static LayerObject filterOutDevtools(LayerObject layerObject) {
-    String dependencyLayerName = JavaContainerBuilder.LayerType.DEPENDENCIES.getName();
-    if (!dependencyLayerName.equals(layerObject.getName())) {
+  static LayerObject filterOutDependencies(LayerObject layerObject, List<String> exclusions) {
+    // skip non-dependencies and non-project_dependencies layers
+    if (!Objects.equals(JavaContainerBuilder.LayerType.DEPENDENCIES.getName(), layerObject.getName())
+            && !Objects.equals(JavaContainerBuilder.LayerType.PROJECT_DEPENDENCIES.getName(), layerObject.getName())) {
       return layerObject;
     }
 
     FileEntriesLayer layer = (FileEntriesLayer) layerObject;
-    Predicate<FileEntry> notDevtoolsJar =
-        fileEntry -> !isDevtoolsJar(fileEntry.getSourceFile().toFile());
+    Predicate<FileEntry> notDependencyJar =
+            fileEntry -> !isDependencyJar(fileEntry.getSourceFile().toFile(), exclusions);
     List<FileEntry> newEntries =
-        layer.getEntries().stream().filter(notDevtoolsJar).collect(Collectors.toList());
+            layer.getEntries().stream().filter(notDependencyJar).collect(Collectors.toList());
     return layer.toBuilder().setEntries(newEntries).build();
   }
 }

@@ -34,6 +34,7 @@ import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -66,9 +67,7 @@ public class JibSpringBootExtensionTest {
   }
 
   private static List<String> layerToExtractionPaths(FileEntriesLayer layer) {
-    return layer
-        .getEntries()
-        .stream()
+    return layer.getEntries().stream()
         .map(layerEntry -> layerEntry.getExtractionPath().toString())
         .collect(Collectors.toList());
   }
@@ -81,24 +80,30 @@ public class JibSpringBootExtensionTest {
   @Test
   public void testIsDevtoolsJar() {
     File file = Paths.get("sub", "folder", "spring-boot-devtools-1.2.3-SNAPSHOT.jar").toFile();
-    assertTrue(JibSpringBootExtension.isDevtoolsJar(file));
+    List<String> exclusions = new ArrayList<>();
+    exclusions.add("spring-boot-devtools-");
+    assertTrue(JibSpringBootExtension.isDependencyJar(file, exclusions));
   }
 
   @Test
   public void testIsDevtoolsJar_noJarExtension() {
     File file = Paths.get("sub", "folder", "spring-boot-devtools-1.2.3-SNAPSHOT").toFile();
-    assertFalse(JibSpringBootExtension.isDevtoolsJar(file));
+    List<String> exclusions = new ArrayList<>();
+    assertFalse(JibSpringBootExtension.isDependencyJar(file, exclusions));
   }
 
   @Test
   public void testIsDevtoolsJar_differentJar() {
     File file = Paths.get("sub", "folder", "not-spring-boot-devtools-1.2.3-SNAPSHOT.jar").toFile();
-    assertFalse(JibSpringBootExtension.isDevtoolsJar(file));
+    List<String> exclusions = new ArrayList<>();
+    exclusions.add("spring-boot-devtools-");
+    assertFalse(JibSpringBootExtension.isDependencyJar(file, exclusions));
   }
 
   @Test
   public void testShouldExcludeDevtools_noSpringBootPlugin() {
-    assertTrue(JibSpringBootExtension.shouldExcludeDevtools(project, logger));
+    List<String> exclusions = new ArrayList<>();
+    assertEquals(exclusions, JibSpringBootExtension.excludeDependencies(project, logger));
 
     verify(logger)
         .log(
@@ -111,7 +116,8 @@ public class JibSpringBootExtensionTest {
     when(project.getPlugin("org.springframework.boot:spring-boot-maven-plugin"))
         .thenReturn(bootPlugin);
 
-    assertTrue(JibSpringBootExtension.shouldExcludeDevtools(project, logger));
+    List<String> exclusions = new ArrayList<>();
+    assertEquals(exclusions, JibSpringBootExtension.excludeDependencies(project, logger));
   }
 
   @Test
@@ -125,7 +131,8 @@ public class JibSpringBootExtensionTest {
         .thenReturn(bootPlugin);
     when(bootPlugin.getConfiguration()).thenReturn(configuration);
 
-    assertFalse(JibSpringBootExtension.shouldExcludeDevtools(project, logger));
+    List<String> exclusions = new ArrayList<>();
+    assertEquals(exclusions, JibSpringBootExtension.excludeDependencies(project, logger));
   }
 
   @Test
@@ -139,7 +146,9 @@ public class JibSpringBootExtensionTest {
         .thenReturn(bootPlugin);
     when(bootPlugin.getConfiguration()).thenReturn(configuration);
 
-    assertTrue(JibSpringBootExtension.shouldExcludeDevtools(project, logger));
+    List<String> exclusions = new ArrayList<>();
+    exclusions.add("spring-boot-devtools-");
+    assertEquals(exclusions, JibSpringBootExtension.excludeDependencies(project, logger));
   }
 
   @Test
@@ -150,7 +159,9 @@ public class JibSpringBootExtensionTest {
             Paths.get("static").resolve("foo.txt"),
             Paths.get("lib").resolve("spring-boot-devtools-1.2.3.jar"),
             Paths.get("archive").resolve("bar.zip"));
-    FileEntriesLayer filtered = (FileEntriesLayer) JibSpringBootExtension.filterOutDevtools(layer);
+    List<String> exclusions = new ArrayList<>();
+    exclusions.add("spring-boot-devtools-");
+    FileEntriesLayer filtered = (FileEntriesLayer) JibSpringBootExtension.filterOutDependencies(layer, exclusions);
 
     assertEquals(Arrays.asList("/dest/foo.txt", "/dest/bar.zip"), layerToExtractionPaths(filtered));
   }
@@ -162,7 +173,9 @@ public class JibSpringBootExtensionTest {
             "NOT dependencies",
             Paths.get("lib").resolve("spring-boot-devtools-1.2.3.jar"),
             Paths.get("archive").resolve("bar.zip"));
-    LayerObject newLayer = JibSpringBootExtension.filterOutDevtools(layer);
+    List<String> exclusions = new ArrayList<>();
+    exclusions.add("spring-boot-devtools-");
+    LayerObject newLayer = JibSpringBootExtension.filterOutDependencies(layer, exclusions);
     assertSame(layer, newLayer);
     assertEquals(layer.getEntries(), ((FileEntriesLayer) newLayer).getEntries());
   }
@@ -190,11 +203,12 @@ public class JibSpringBootExtensionTest {
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
     FileEntriesLayer newLayer2 = (FileEntriesLayer) newPlan.getLayers().get(1);
 
-    assertEquals(Arrays.asList("/dest/bar.zip"), layerToExtractionPaths(newLayer1));
+    assertEquals(Arrays.asList("/dest/spring-boot-devtools-1.2.3.jar", "/dest/bar.zip"),
+            layerToExtractionPaths(newLayer1));
     assertEquals(
         Arrays.asList("/dest/spring-boot-devtools-1.2.3.jar"), layerToExtractionPaths(newLayer2));
 
-    verify(logger).log(LogLevel.INFO, "Removing spring-boot-devtools (if any)");
+    verify(logger).log(LogLevel.INFO, "Keeping dependencies (if any)");
   }
 
   @Test
@@ -224,6 +238,6 @@ public class JibSpringBootExtensionTest {
             .extendContainerBuildPlan(buildPlan, null, Optional.empty(), mavenData, logger);
     assertSame(buildPlan, newPlan);
 
-    verify(logger).log(LogLevel.INFO, "Keeping spring-boot-devtools (if any)");
+    verify(logger).log(LogLevel.INFO, "Keeping dependencies (if any)");
   }
 }
