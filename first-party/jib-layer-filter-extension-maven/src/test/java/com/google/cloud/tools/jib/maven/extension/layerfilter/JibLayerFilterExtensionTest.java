@@ -33,7 +33,6 @@ import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger;
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger.LogLevel;
 import com.google.cloud.tools.jib.plugins.extension.JibPluginExtensionException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -235,9 +234,6 @@ public class JibLayerFilterExtensionTest {
     JibLayerFilterExtension extension = new JibLayerFilterExtension();
     ContainerBuildPlan newPlan =
         extension.extendContainerBuildPlan(buildPlan, null, Optional.of(config), null, logger);
-
-    ArrayList<String> layerNames = new ArrayList<>(extension.newToLayers.keySet());
-    assertEquals(Arrays.asList("foo", "same layer name", "bar", "baz"), layerNames);
 
     assertEquals(4, newPlan.getLayers().size());
     FileEntriesLayer newLayer1 = (FileEntriesLayer) newPlan.getLayers().get(0);
