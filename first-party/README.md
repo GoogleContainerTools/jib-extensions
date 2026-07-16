@@ -6,7 +6,7 @@ A list of Jib extensions developed and maintained by the Jib developer team. For
 - Jib Quarkus Extension ([Maven](jib-quarkus-extension-maven) / [Gradle](jib-quarkus-extension-gradle))
 - Jib Ownership Extension ([Maven](jib-ownership-extension-maven) / [Gradle](jib-ownership-extension-gradle))
 - Jib Spring Boot Extension ([Maven](jib-spring-boot-extension-maven) / [Gradle](jib-spring-boot-extension-gradle))
-- Jib GraalVM Native Image Extension ([Maven](jib-native-image-extension-maven))
+- Jib GraalVM Native Image Extension ([Maven](jib-native-image-extension-maven) / [Gradle](jib-native-image-extension-gradle))
 
 If you have written a useful extension that you think will benefit the Jib community, file a PR to add a link to the [Third-Party Extensions](../third-party/) list. Jib users will greatly appreciate it!
 

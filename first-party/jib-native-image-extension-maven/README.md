@@ -1,6 +1,6 @@
 # Jib GraalVM Native Image Extension
 
-This extension containerizes a [GraalVM native-imgae](https://www.graalvm.org/docs/reference-manual/native-image/) application configured with [Native Image Maven Plugin](https://graalvm.github.io/native-build-tools/latest/maven-plugin.html).
+This extension containerizes a [GraalVM native-image](https://www.graalvm.org/docs/reference-manual/native-image/) application configured with [Native Image Maven Plugin](https://graalvm.github.io/native-build-tools/latest/maven-plugin.html).
 
 The extension expects the `native-image-maven-plugin` to do the the heavy lifting of generating a "native image" (with the `native-image:native-image` goal). (The "image" in "native image" refers to an executable binary, not a container image.) Then the extension simply copies the binary, say, `<project root>/target/com.example.mymainclass`, into a container image and sets executable bits. It also auto-sets the container image entrypoint to the binary, say, `/app/com.example.mymainclass` (unless you manually configure `<container><entrypoint>` in the main Jib configuration).
 
